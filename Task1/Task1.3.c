@@ -30,10 +30,10 @@ void turn (char c, float angle, float speed)
 			get_motor_encoders(leftcount, rightcount);
 			differenceLeft = abs(*leftcount - initialLeft);
 			differenceRight = abs(*rightcount - initialRight);
-			percentageLeft = abs((encoder - differenceLeft)/encoder);
-			percentageRight = abs((encoder - differenceRight)/encoder);
+			percentageLeft = differenceLeft/encoder;
+			percentageRight = differenceRight/encoder;
 			printf("percentageLeft = %f, percentageRight = %f\n", percentageLeft, percentageRight);
-			if((percentageRight>0.7)&&(percentageLeft>0.7))
+			if((percentageRight>0.5)&&(percentageLeft>0.5))
 			{
 				speedLeft = (((encoder - differenceLeft)/encoder)*speed) + 1;
 				speedRight = (((encoder - differenceRight)/encoder)*speed) + 1;
@@ -141,6 +141,7 @@ int main()
 	printf("Enter the angle\n");
 	scanf("%f", &angle);
 	*/
+
 	distance = 1;
 	speed1 = 127;
 	speed2 = 127;
