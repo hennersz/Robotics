@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>23AA68AD-A9A9-4848-8E1A-DEBFADDDBC20</string>
+	<key>IDESourceControlProjectName</key>
+	<string>Task1</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>ECAD163BE9D985EEBC48B16B62EEF486A25757E5</key>
+		<string>https://github.com/hennersz/Robotics.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>Task1/Task1.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>ECAD163BE9D985EEBC48B16B62EEF486A25757E5</key>
+		<string>../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/hennersz/Robotics.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>ECAD163BE9D985EEBC48B16B62EEF486A25757E5</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>ECAD163BE9D985EEBC48B16B62EEF486A25757E5</string>
+			<key>IDESourceControlWCCName</key>
+			<string>Robotics</string>
+		</dict>
+	</array>
+</dict>
+</plist>

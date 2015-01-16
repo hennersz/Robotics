@@ -7,47 +7,66 @@
 #include <arpa/inet.h>
 #include "picomms.h"
 
-void turn (char c, float angle, int speed)
+void turn (char c, float angle, float speed)
 {
 	int *leftcount, *rightcount;
+	float speedLeft, speedRight;
+	int differenceLeft = 0;
+	int differenceRight = 0;
 	int test = 5;
 	leftcount = rightcount = &test;
+
 	get_motor_encoders(leftcount, rightcount);    
 	int initialLeft = *leftcount;	//store initial values
 	int initialRight = *rightcount;
-	float ratio = 218.0/90.0;
+	float ratio = 214/90.0;
+	printf("Ratio = %f\n", ratio);
 	float encoder = ratio*angle;
 	if (c == 'L')
 	{
 		while (1)
 		{
 			get_motor_encoders(leftcount, rightcount);
-			printf("left = %i, right = %i\n", *leftcount - initialLeft, *rightcount - initialRight);
-			if (abs(*leftcount-initialLeft) == (int)encoder && abs(*rightcount - initialRight) == (int)encoder)
+			differenceLeft = abs(*leftcount - initialLeft);
+			differenceRight = abs(*rightcount - initialRight);
+			speedLeft = (((encoder - differenceLeft)/encoder)*speed) + 1;
+			speedRight = (((encoder - differenceRight)/encoder)*speed) + 1;
+
+			printf("T\t%i\t%i\t%f\t%f\n", differenceLeft, differenceRight, speedLeft, speedRight);
+			if (differenceLeft == (int)encoder && differenceRight == (int)encoder)
 				break;
-			else if (abs(*leftcount-initialLeft) > encoder && abs(*rightcount - initialRight) > encoder)
-				set_motors(speed, -speed);
+			else if (differenceLeft > encoder && differenceRight > encoder)
+				set_motors((int)speedLeft, -(int)speedRight);
 			else
-				set_motors(-speed, speed);
+				set_motors(-(int)speedLeft, (int)speedRight);
 		}
 	}
 	else if (c == 'R')
 		while (1)
 		{
 			get_motor_encoders(leftcount, rightcount);
-			if (abs(*leftcount-initialLeft) == (int)encoder && abs(*rightcount - initialRight) == (int)encoder)
-			{
-				set_motors(speed, -speed);
+			differenceLeft = abs(*leftcount - initialLeft);
+			differenceRight = abs(*rightcount - initialRight);
+			speedLeft = (((encoder - differenceLeft)/encoder)*speed) + 1;
+			speedRight = (((encoder - differenceRight)/encoder)*speed) + 1;
+
+			printf("T\t%i\t%i\t%f\t%f\n", differenceLeft, differenceRight, speedLeft, speedRight);
+			if (differenceLeft == (int)encoder && differenceRight == (int)encoder)
 				break;
-			}
-			else if (abs(*leftcount-initialLeft) > (int)encoder || abs(*rightcount - initialRight) > (int)encoder)
-				set_motors(-speed, speed);
+			else if (differenceLeft > encoder && differenceRight > encoder)
+				set_motors(-(int)speedLeft, (int)speedRight);
+			else
+				set_motors((int)speedLeft, -(int)speedRight);
 		}
 }
 
-void straightLine(int x, int speed)
+void straightLine(int x, float speed)
 {
 	int *leftcount, *rightcount;
+	float speedLeft, speedRight;
+	int differenceLeft = 0;
+	int differenceRight = 0;
+
 	int test = 5;
 	leftcount = rightcount = &test;
 	get_motor_encoders(leftcount, rightcount);    //find initial values
@@ -57,23 +76,18 @@ void straightLine(int x, int speed)
 	while(1)
 	{
 		get_motor_encoders(leftcount, rightcount);
+		differenceLeft = abs(*leftcount - initialLeft);
+		differenceRight = abs(*rightcount - initialRight);
+		speedLeft = (((float)(x - differenceLeft)/x)*speed) + 1;
+		speedRight = (((float)(x - differenceRight)/x)*speed) + 1;
 		log_trail();
-		if(abs(*leftcount-initialLeft) == x && abs(*rightcount - initialRight) == x)
+		printf("T\t%i\t%i\t%f\t%f\n", differenceLeft, differenceRight, speedLeft, speedRight);
+		if(differenceLeft == x && differenceRight == x)
 			break;
-		else if (abs(*leftcount-initialLeft) < abs(*rightcount - initialRight))
-		{
-			set_motors(5, 0);
-			printf("correct\n");
-		}
-		else if (abs(*leftcount-initialLeft) > abs(*rightcount - initialRight))
-		{
-			set_motors(0, 5);
-			printf("correct\n");
-		}
-		else if (abs(*leftcount-initialLeft) > x || abs(*rightcount - initialRight) > x)
-			break;
+		else if (differenceLeft > x && differenceRight > x)
+			set_motors(-(int)speedLeft, -(int)speedRight);
 		else
-			set_motors(speed, speed);
+			set_motors((int)speedLeft, (int)speedRight);
 	}
 }
 int main()
@@ -83,23 +97,28 @@ int main()
 	int i = 0;
 	float angle;
 	int distance;
-	int speed1;
-	int speed2;
+	float speed1;
+	float speed2;
 	char direction;
 
-	printf("Enter the distance\n");
+	/*printf("Enter the distance\n");
 	scanf("%i", &distance);
 	printf("Enter speed (line)\n");
-	scanf("%i", &speed1);
+	scanf("%f", &speed1);
 	printf("Enter turning speed\n");
-	scanf("%i", &speed2);
+	scanf("%f", &speed2);
 	printf("Direction (L/R)\n");
 	scanf(" %c", &direction);
 	printf("Enter the angle\n");
 	scanf("%f", &angle);
-	
+	*/
+	distance = 500;
+	speed1 = 50;
+	speed2 = 50;
+	direction = 'L';
+	angle = 90;
 
-	while(i < 4)
+	while(i < 6)
 	{
 		straightLine(distance, speed1);
 		turn(direction, angle, speed2);
