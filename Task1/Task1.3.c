@@ -112,16 +112,16 @@ int main()
 	printf("Enter the angle\n");
 	scanf("%f", &angle);
 	*/
-	distance = 500;
-	speed1 = 50;
-	speed2 = 50;
+	distance = 1000;
+	speed1 = 127;
+	speed2 = 127;
 	direction = 'L';
-	angle = 90;
-
-	while(i < 6)
-	{
+	angle = 360;
+	//while(i < 6)
+	//{
 		straightLine(distance, speed1);
 		turn(direction, angle, speed2);
-		i++;
-	}
+		straightLine(distance, -speed1);
+	//	i++;
+	//}
 }
