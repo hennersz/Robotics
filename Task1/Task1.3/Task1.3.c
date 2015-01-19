@@ -114,7 +114,7 @@ void straightLine(float distance, float speed)
     get_motor_encoders(left, right);
     int initialLeft = *left;
     int initialRight = *right;
-    float targetDistance = 1194 * distance;     // 1 m is 1194 clicks
+    float targetDistance = abs(1194 * distance);     // 1 m is 1194 clicks
     int forward = (int)(distance/abs(distance));
     
     turningProcess(initialLeft, initialRight, targetDistance, forward, forward, speed, false);
@@ -122,40 +122,40 @@ void straightLine(float distance, float speed)
     free(right);
 }
 int main()
-{
-    
+{   
     connect_to_robot();
-    initialize_robot();
-    int i = 0;
-    float angle;
-    float distance;
-    float speed1;
-    float speed2;
-    char direction;
-    
-    /*printf("Enter the distance\n");
-     scanf("%i", &distance);
-     printf("Enter speed (line)\n");
-     scanf("%f", &speed1);
-     printf("Enter turning speed\n");
-     scanf("%f", &speed2);
-     printf("Direction (L/R)\n");
-     scanf(" %c", &direction);
-     printf("Enter the angle\n");
-     scanf("%f", &angle);
-     */
-    distance = 1.0;
-    speed1 = 50;
-    speed2 = 127;
-    direction = 'L';
-    angle = 90;
-    turn('L', 180, 127);
-    
-    while(i < 4)
-    {
-        usleep(40000);
-        straightLine(1, speed1);
-        turn(direction, angle, speed2);
-        i++;
-    }
+	initialize_robot();
+	int i = 0;
+	float angle;
+	float distance;
+	float speed1;
+	float speed2;
+	char direction;
+
+	/*printf("Enter the distance\n");
+	scanf("%i", &distance);
+	printf("Enter speed (line)\n");
+	scanf("%f", &speed1);
+	printf("Enter turning speed\n");
+	scanf("%f", &speed2);
+	printf("Direction (L/R)\n");
+	scanf(" %c", &direction);
+	printf("Enter the angle\n");
+	scanf("%f", &angle);
+	*/
+	distance = 1.0;
+	speed1 = 50;
+	speed2 = 127;
+	direction = 'L';
+	angle = 90;
+	turn('L', 180, 127);
+
+	while(i < 4)
+	{
+        usleep(20000);
+		straightLine(distance, speed1);
+        usleep(20000);
+		turn(direction, angle, speed2);
+		i++;
+	}
 }
