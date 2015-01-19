@@ -488,10 +488,11 @@ class RobotVis(BaseObjVis):
 
             s_range = self.sensor_range[1]
             x3,y3 = self.calc_number_posn(s_range, self.max_front_ir_range,x1,y1,x2,y2)
-            surface = self.nums[s_range]
-            w,h = surface.get_size()
-            pos = (int(x3-w/2), int(y3-h/2))
-            self.g_screen.blit(surface, pos)
+            if s_range >= 0 and s_range < 400:
+                surface = self.nums[s_range]
+                w,h = surface.get_size()
+                pos = (int(x3-w/2), int(y3-h/2))
+                self.g_screen.blit(surface, pos)
 
             x1 = x + (12.5*size)/40
             y1 = y - (16*size)/40
@@ -506,10 +507,11 @@ class RobotVis(BaseObjVis):
             pygame.draw.line(self.g_screen, palered, (x1,y1), (x2,y2), 1)
             s_range = self.sensor_range[0]
             x3,y3 = self.calc_number_posn(s_range, self.max_front_ir_range,x1,y1,x2,y2)
-            surface = self.nums[s_range]
-            w,h = surface.get_size()
-            pos = (int(x3-w/2), int(y3-h/2))
-            self.g_screen.blit(surface, pos)
+            if s_range >= 0 and s_range < 400:
+                surface = self.nums[s_range]
+                w,h = surface.get_size()
+                pos = (int(x3-w/2), int(y3-h/2))
+                self.g_screen.blit(surface, pos)
 
     def do_side_ir_display(self, x_offset, y_offset):
         x = (self.x - x_offset) * self.display.zoom
@@ -576,10 +578,11 @@ class RobotVis(BaseObjVis):
             pygame.draw.line(self.g_screen, palered, (x1,y1), (x2,y2), 1)
             s_range = self.sensor_range[3]
             x3,y3 = self.calc_number_posn(s_range, self.max_side_ir_range,x1,y1,x2,y2)
-            surface = self.nums[s_range]
-            w,h = surface.get_size()
-            pos = (int(x3-w/2), int(y3-h/2))
-            self.g_screen.blit(surface, pos)
+            if s_range >= 0 and s_range < 400:
+                surface = self.nums[s_range]
+                w,h = surface.get_size()
+                pos = (int(x3-w/2), int(y3-h/2))
+                self.g_screen.blit(surface, pos)
 
             x1 = x + (16*size)/40
             y1 = y + (13*size)/40
@@ -595,10 +598,11 @@ class RobotVis(BaseObjVis):
             pygame.draw.line(self.g_screen, palered, (x1,y1), (x2,y2), 1)
             s_range = self.sensor_range[2]
             x3,y3 = self.calc_number_posn(s_range, self.max_side_ir_range,x1,y1,x2,y2)
-            surface = self.nums[s_range]
-            w,h = surface.get_size()
-            pos = (int(x3-w/2), int(y3-h/2))
-            self.g_screen.blit(surface, pos)
+            if s_range >= 0 and s_range < 400:
+                surface = self.nums[s_range]
+                w,h = surface.get_size()
+                pos = (int(x3-w/2), int(y3-h/2))
+                self.g_screen.blit(surface, pos)
 
     def calc_number_posn(self, s_range, max_range, x1, y1, x2, y2):
         frac = s_range / (0.26*max_range)

@@ -6,13 +6,13 @@ import pygame
 from pygame.locals import *
 from pgu import gui
 
-version = "V2.1.0"
+version = "V2.2.0"
 
 PYTHON_MAJOR = sys.version_info[0]
 
 import os
 from src.loadscenery import SceneryParser, LoadError
-from src.constants import L, R, NO_NOISE, GAUSSIAN_NOISE, ANGULAR_NOISE
+from src.constants import L, R, NO_NOISE, SAMPLED_NOISE, GAUSSIAN_NOISE, ANGULAR_NOISE
 from math import sqrt
 
 class ErrorDialog(gui.Dialog):
@@ -39,31 +39,17 @@ class PrefsDialog(gui.Dialog):
         ##are added to that form.                                                        
         ##::                                                                             
         self.value = gui.Form()
-        self.noise = [0,5,5]
+        self.noise = [0,0,5,5]
         self.noise[noise_model] = noise_value
         self.prev_noise_model = noise_model
 
         t = gui.Table()
 
-#         t.tr()
-#         t.td(gui.Label("Size"),align=0,colspan=2)
-
-#         tt = gui.Table()
-#         tt.tr()
-#         tt.td(gui.Label("Width: "),align=1)
-#         tt.td(gui.Input(name="width",value=256,size=4))
-#         tt.tr()
-#         tt.td(gui.Label("Height: "),align=1)
-#         tt.td(gui.Input(name="height",value=256,size=4))
-#         t.tr()
-#         t.td(tt,colspan=2)
-        ##                                                                               
 
         t.tr()
         t.td(gui.Spacer(width=8,height=8))
         t.tr()
         t.td(gui.Label("IR Sensor Noise",align=0))
-        #t.td(gui.Label("Background",align=0))
 
         t.tr()
         g = gui.Group(name="irnoise",value=noise_model)
@@ -74,8 +60,12 @@ class PrefsDialog(gui.Dialog):
         tt.td(radio0)
         tt.td(gui.Label(" None"),align=-1, width=300, colspan=3)
         tt.tr()
-        radio1 = gui.Radio(g,value=GAUSSIAN_NOISE)
-        tt.td(radio1)
+        radio2 = gui.Radio(g,value=SAMPLED_NOISE)
+        tt.td(radio2)
+        tt.td(gui.Label(" Sampled"),align=-1, width=300, colspan=3)
+        tt.tr()
+        radio3 = gui.Radio(g,value=GAUSSIAN_NOISE)
+        tt.td(radio3)
         tt.td(gui.Label(" Gaussian"),align=-1)
         self.noise_slider1 = gui.HSlider(name="noise1", value=self.noise[GAUSSIAN_NOISE], 
                                          min=1, max=9, size = 20, width=80, height=16)
@@ -83,11 +73,11 @@ class PrefsDialog(gui.Dialog):
         self.noise_slider1.connect(gui.CHANGE, self.adjust_noise, 
                                    (self.noise_slider1, self.noise_label1, GAUSSIAN_NOISE))
         if noise_model == GAUSSIAN_NOISE:
-            tt.add(self.noise_slider1, 2, 1)
-            tt.add(self.noise_label1, 3,1)
+            tt.add(self.noise_slider1, 2, 2)
+            tt.add(self.noise_label1, 3, 2)
         tt.tr()
-        radio3 = gui.Radio(g,value=ANGULAR_NOISE)
-        tt.td(radio3)
+        radio4 = gui.Radio(g,value=ANGULAR_NOISE)
+        tt.td(radio4)
         tt.td(gui.Label(" Angular"),align=-1)
         self.noise_slider2 = gui.HSlider(name="noise2", value=self.noise[ANGULAR_NOISE], 
                                          min=1, max=9, size = 20, width=80, height=16)
@@ -95,33 +85,10 @@ class PrefsDialog(gui.Dialog):
         self.noise_slider2.connect(gui.CHANGE, self.adjust_noise, 
                                    (self.noise_slider2, self.noise_label2, ANGULAR_NOISE))
         if noise_model == ANGULAR_NOISE:
-            tt.add(self.noise_slider2,2,2)
-            tt.add(self.noise_label2,3,2)
+            tt.add(self.noise_slider2,2,3)
+            tt.add(self.noise_label2,3,3)
         t.td(tt,colspan=1)
         
-
-#         g = gui.Group(name="color",value="#ffffff")
-#         tt = gui.Table()
-#         tt.tr()
-#         tt.td(gui.Radio(g,value="#000000"))
-#         tt.td(gui.Label(" Black"),align=-1)
-#         tt.tr()
-#         tt.td(gui.Radio(g,value="#ffffff"))
-#         tt.td(gui.Label(" White"),align=-1)
-#         tt.tr()
-
-#         default = "#ffffff"
-#         radio = gui.Radio(g,value="custom")
-#         color = gui.Color(default,width=40,height=16,name="custom")
-        #picker = ColorDialog(default)
-
-        #color.connect(gui.CLICK,gui.action_open,{'container':t,'window':picker})
-        #picker.connect(gui.CHANGE,gui.action_setvalue,(picker,color))
-
-#        tt.td(radio)
-#        tt.td(color)
-
-        #t.td(tt,colspan=1)
 
         tt = gui.Table()
         tt.tr()
@@ -158,11 +125,11 @@ class PrefsDialog(gui.Dialog):
         (tt, group) = value
         noise_model = group.value
         if noise_model == GAUSSIAN_NOISE:
-            tt.add(self.noise_slider1, 2, 1)
-            tt.add(self.noise_label1, 3,1)
+            tt.add(self.noise_slider1, 2, 2)
+            tt.add(self.noise_label1, 3, 2)
         elif noise_model == ANGULAR_NOISE:
-            tt.add(self.noise_slider2, 2, 2)
-            tt.add(self.noise_label2, 3,2)
+            tt.add(self.noise_slider2, 2, 3)
+            tt.add(self.noise_label2, 3, 3)
         if self.prev_noise_model == GAUSSIAN_NOISE and noise_model != GAUSSIAN_NOISE:
             tt.remove(self.noise_slider1)
             tt.remove(self.noise_label1)
@@ -264,27 +231,18 @@ class Display():
         self.zoom=zoom
         self.x_offset = 0
         self.y_offset = 0
-        #self.ir_front_enable = IntVar()
-        #self.ir_front_enable.set(0)
-        #self.ir_side_enable = IntVar()
-        #self.ir_side_enable.set(0)
-        #self.us_enable = IntVar()
-        #self.us_enable.set(0)
         self.ir_front_used = False
         self.ir_side_used = False
         self.us_used = False
-        self.noise_model = NO_NOISE
+        self.noise_model = SAMPLED_NOISE
         self.noise_value = 0
         self.rand_under = False
         self.display_text = ["UCL","RoboSim"]
         self.create_display()
-        #self.centred = BooleanVar()
+        self.active = True
+        self.timenow = 0
+        self.last_active = 0
 
-        return
-        __version__ = "200"
-        version = ''.join(c for c in __version__ if c.isdigit())
-        root.wm_title("RoboSim v" + __version__)
-        self.windowsystem = root.call('tk', 'windowingsystem')
 
     def register_world(self, world):
         self.world = world
@@ -292,6 +250,7 @@ class Display():
     def jb_set(self, x,y):
         norm = sqrt(x * x + y * y)/10.0
         if (norm != 0):
+            self.set_active()
             lspeed = (-40 * y/10.0 + 10 * x / 10.0)/norm
             rspeed = (-40 * y/10.0 - 10 * x / 10.0)/norm
         else:
@@ -300,63 +259,8 @@ class Display():
         self.world.robot.set_speed(L, lspeed)
         self.world.robot.set_speed(R, rspeed)
 
-#     def jb_press(self, event):
-#         self.offset = [event.x, event.y]
-
-#     def jb_release(self, event):
-#         x,y = self.joystick.coords("stick")
-#         xdiff = self.jb_pos[0] - x
-#         ydiff = self.jb_pos[1] - y
-#         self.joystick.move("stick", xdiff, ydiff)
-#         newx = x + xdiff
-#         newy = y + ydiff
-#         self.xval = (43 - newx) * 100.0 / 30.0
-#         self.yval = (43 - newy) * 100.0 / 30.0
-#         self.world.robot.set_speed(L, 0)
-#         self.world.robot.set_speed(R, 0)
-        
     def foo(self, dummy):
         pass
-
-#     def jb_move(self, event):
-#         x,y = self.joystick.coords("stick")
-#         xdiff = event.x - self.offset[0]
-#         ydiff = event.y - self.offset[1]
-#         newx = x + xdiff
-#         newy = y + ydiff
-#         if newx < 13:
-#             xdiff = 13 - x
-#             newx = 13
-#         if newx > 73:
-#             xdiff = 73 - x
-#             newx = 73
-#         if newy < 13:
-#             ydiff = 13 - y
-#             newy = 13
-#         if newy > 73:
-#             ydiff = 73 - y
-#             newy = 73
-#         self.joystick.move("stick", xdiff, ydiff)
-#         self.xval = (43 - newx) * 100.0 / 30.0
-#         self.yval = (43 - newy) * 100.0 / 30.0
-#         norm = sqrt(self.xval * self.xval + self.yval * self.yval)/100.0
-#         if (norm != 0):
-#             lspeed = (40 * self.yval/100.0 - 10 * self.xval / 100.0)/norm
-#             rspeed = (40 * self.yval/100.0 + 10 * self.xval / 100.0)/norm
-#         else:
-#             lspeed = 0
-#             rspeed = 0
-#         self.world.robot.set_speed(L, lspeed)
-#         self.world.robot.set_speed(R, rspeed)
-
-#     def jb_enter(self, event):
-#         self.jb.configure(bg="white")
-
-#     def jb_leave(self, event):
-#         self.jb.configure(bg="grey")
-
-#     def exit_sim(self):
-#         os._exit(0)
 
     def dialog_event_loop(self):
         self.load_dialog_displayed = True
@@ -368,6 +272,7 @@ class Display():
             pygame.display.flip()
 
     def load_pressed(self, param):
+        self.set_active()
         self.load_d = gui.FileDialog(title_txt="Load Scenery File", button_txt="Load")
         self.load_d.connect(gui.CHANGE, self.handle_file_browser_closed, self.load_d)
         self.load_d.connect(gui.CLOSE, self.leave_dialog_event_loop, None)
@@ -452,24 +357,28 @@ class Display():
         self.create_display()
 
     def set_ir_front(self):
+        self.set_active();
         if self.front_ir_switch.state:
             self.world.robot.show_front_ir(True)
         else:
             self.world.robot.show_front_ir(False)
 
     def set_ir_side(self):
+        self.set_active();
         if self.side_ir_switch.state:
             self.world.robot.show_side_ir(True)
         else:
             self.world.robot.show_side_ir(False)
 
     def set_us(self):
+        self.set_active();
         if self.us_switch.state:
             self.world.robot.show_us(True)
         else:
             self.world.robot.show_us(False)
 
     def set_manual(self):
+        self.set_active();
         if self.manual_switch.state:
             self.manual_enabled = True
             self.front_ir_switch.add(order=3)
@@ -488,11 +397,14 @@ class Display():
             self.joystick.remove()
 
     def set_noise_model(self, noise_model, noise_value, rand_under):
+        self.set_active();
         self.noise_model = noise_model
         self.noise_value = noise_value
         self.rand_under = rand_under
         if noise_model == NO_NOISE:
             t = "Noise Model: None"
+        elif noise_model == SAMPLED_NOISE:
+            t = "Noise Model: Sampled"
         elif noise_model == GAUSSIAN_NOISE:
             t = "Noise Model: Gaussian (" + str(noise_value) + ")"
         elif noise_model == ANGULAR_NOISE:
@@ -504,9 +416,11 @@ class Display():
         self.world.robot.set_rand_noise(rand_under)
 
     def set_zoom(self,value):
+        self.set_active();
         self.zoom=value/10.0
 
     def reset_posn(self, dummy):
+        self.set_active();
         self.world.robot.reset_posn()
         
     def no_op(self, *args):
@@ -514,9 +428,11 @@ class Display():
         pass
 
     def lservo_set(self, value):
+        self.set_active();
         self.world.robot.set_ir_angle(L, int(value))
 
     def rservo_set(self, value):
+        self.set_active();
         self.world.robot.set_ir_angle(R, int(value))
         
     def set_sensor_visibility(self, ir_front, ir_side, us, line):
@@ -614,11 +530,14 @@ class Display():
         for event in pygame.event.get():
             sgc.event(event)
             if event.type == GUI:
+                self.active = True
                 pass
             elif event.type == QUIT:
                 exit()
             else:
+                self.active = True
                 self.app.event(event)
+        return self.active
 
     def draw_background(self):
         background_colour = (255,255,255)
@@ -636,9 +555,23 @@ class Display():
         self.y_offset = y_offset
         self.draw_background()
 
+    def set_active(self):
+        self.active = True
+        self.last_active = self.timenow
+
     def flip(self):
         self.draw_panels()
-        time = self.clock.tick(30)
+        if self.active:
+            #if nothing has happened for 30 seconds, go inactive
+            if self.timenow - self.last_active > 5000:
+                self.active = False 
+        if self.active:
+            #print 30
+            time = self.clock.tick(30)
+        else:
+            #print 5
+            time = self.clock.tick(5)
+        self.timenow = self.timenow + time
         sgc.update(time)
         self.app.paint()
         pygame.display.flip()

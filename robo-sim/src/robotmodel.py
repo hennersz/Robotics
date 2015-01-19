@@ -1,7 +1,8 @@
 from __future__ import division 
 from src.baseobject import BaseObj
 from src.visualize import *
-from src.constants import L, R, FRONT, SIDE, NO_NOISE, \
+from src.noisemodel import FrontNoiseModel, SideNoiseModel
+from src.constants import L, R, FRONT, SIDE, NO_NOISE, SAMPLED_NOISE,\
     GAUSSIAN_NOISE, ANGULAR_NOISE
 from math import *
 from random import *
@@ -69,6 +70,14 @@ class RobotModel(BaseObj):
         self.vis = RobotVis(display, 100, 100, 30, self.size,
                             self.max_ir_range[FRONT], self.max_ir_range[SIDE])
         self.reset_origin()
+        self.front_noise_model = FrontNoiseModel();
+        self.side_noise_model = SideNoiseModel();
+
+    def reset(self):
+        self.reset_motor_encoders()
+        self.clear_points()
+        self.clear_trail()
+        self.disable_async()
 
     def set_controller(self, controller):
         self.controller = controller
@@ -139,7 +148,13 @@ class RobotModel(BaseObj):
 
     def set_ir_dist(self, sensor, side, dist, time):
         self.ir_sample_time = time
-        if self.noise_model == GAUSSIAN_NOISE:
+        if self.noise_model == SAMPLED_NOISE:
+            if sensor == FRONT:
+                #print "scale: ", self.scale, " dist: ", dist
+                randdist = self.front_noise_model.add_noise(dist * self.scale) / self.scale
+            if sensor == SIDE:
+                randdist = self.side_noise_model.add_noise(dist * self.scale) / self.scale
+        elif self.noise_model == GAUSSIAN_NOISE:
             randdist = self.rand.gauss(dist, self.noise_value*sqrt(dist)/10)
         elif self.noise_model == ANGULAR_NOISE:
             if sensor == FRONT:
@@ -505,9 +520,9 @@ class RobotModel(BaseObj):
             #dx = dh * sin(angle_change)
             #dy = dh * cos(angle_change)
 
+        deltax = dh * sin(self.angle + angle_change/2)
+        deltay = 0 - dh * cos(self.angle + angle_change/2)
         self.angle = self.angle + angle_change
-        deltax = dh * sin(self.angle)
-        deltay = 0 - dh * cos(self.angle)
         self.x = self.x + deltax
         self.y = self.y + deltay
         self.vis.set_posn(self.x, self.y, self.angle);
@@ -560,6 +575,9 @@ class RobotModel(BaseObj):
             self.async_enabled = False
             return False
         return True
+
+    def disable_async(self):
+        self.async_enabled = False
 
     def set_async_update_interval(self, update_interval):
         self.async_update_interval = update_interval/1000.0

@@ -22,10 +22,6 @@ from src.control import Controller
 
 class Simulator():
     def __init__(self, port):
-        #self.root = Tk()
-        #self.root.wm_title("RoboSim")
-        #self.windowsystem = self.root.call('tk', 'windowingsystem')
-        #print(self.windowsystem)
         self.zoom = 1
         self.disp = Display(self.zoom)
 
@@ -44,17 +40,24 @@ class Simulator():
             self.controller = Controller(port,self.robot, 1)
         else:
             self.controller = Controller(55443,self.robot, 0)
-
         self.robot.set_controller(self.controller)
         self.robot.init_robot_posn(500,350,0)
         self.robot.set_ir_angles(0, 0)
         self.robot.stop()
+        self.active = True
+
+    def poll_controller(self):
+        cont_active = self.controller.poll()
+        if cont_active:
+            self.disp.set_active();
+            
+    def process_gui(self):
+        self.active = self.disp.process_gui_events()
 
 
     def run(self):
         #local variables are fastest and this is the inner loop
         world = self.world
-        controller = self.controller
         robot = self.robot
         realtime = time.time()
         starttime = realtime
@@ -69,49 +72,53 @@ class Simulator():
                 #phase 1
                 #first update after pygame's sleep
                 realtime = time.time()
-                self.robot.update_position()
-                self.world.check_wheel_drag()
-                controller.poll()
+                if self.active:
+                    self.robot.update_position()
+                    self.world.check_wheel_drag()
+                self.poll_controller()
 
                 #phase 2
                 #process the gui
-                self.disp.process_gui_events()
+                self.process_gui()
                 cur_time = cur_time + 1
                 world.set_time(realtime)
                 x_offset, y_offset = robot.self_update(cur_time, realtime)
-                self.world.check_wheel_drag()
+                if self.active:
+                    self.world.check_wheel_drag()
                 zoom = self.disp.zoom
                 x_offset = x_offset - (500/zoom)
                 y_offset = y_offset - (350/zoom)
-                controller.poll()
+                self.poll_controller()
 
                 #phase 3
-                #update sensors, updaye display
-                world.sample_all_sensors()
+                #update sensors, update display
+                if self.active:
+                    world.sample_all_sensors()
                 self.disp.update(x_offset, y_offset)
-                self.robot.update_position()
-                self.world.check_wheel_drag()
-                controller.poll()
+                if self.active:
+                    self.robot.update_position()
+                    self.world.check_wheel_drag()
+                self.poll_controller()
 
                 #phase 4
                 #check collisions
                 world.check_collision()
-                self.robot.update_position()
-                self.world.check_wheel_drag()
-                controller.poll()
+                if self.active:
+                    self.robot.update_position()
+                    self.world.check_wheel_drag()
+                self.poll_controller()
 
                 #phase 5
                 #draw the screen
                 world.redraw()
-                self.robot.update_position()
-                self.world.check_wheel_drag()
-                controller.poll()
+                if self.active:
+                    self.robot.update_position()
+                    self.world.check_wheel_drag()
+                self.poll_controller()
                 #may sleep in flip
                 self.disp.flip()
         except KeyboardInterrupt:
             sys.exit()
                                 
 
-#sim = Simulator()
-#sim.run()
 

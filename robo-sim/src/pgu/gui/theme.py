@@ -17,6 +17,7 @@ from .errors import StyleError
 from .basic import parse_color, is_color
 
 __file__ = os.path.abspath(__file__)
+print __file__
 
 class Theme:
     """Theme interface.
