@@ -80,6 +80,8 @@ void turningProcess(int initialLeft, int initialRight, float target, int leftSig
         else																			//still needs to travel
             set_motors((int)speedLeft, (int)speedRight);
     }
+    free(leftcount);
+    free(rightcount);
 }
 
 void turn (char direction, float angle, float speed)
@@ -99,17 +101,17 @@ void turn (char direction, float angle, float speed)
         turningProcess(initialLeft, initialRight, encoder, -1, 1, speed);
     else if (direction == 'R')
         turningProcess(initialLeft, initialRight, encoder, 1, -1, speed);
+    free(left);
+    free(right);
 }
 
 void straightLine(float distance, float speed)
 {
-    int *leftcount, *rightcount;
+    int *leftcount = malloc(sizeof(int));
+    int *rightcount = malloc(sizeof(int));
     float speedLeft, speedRight;
     int differenceLeft = 0;
     int differenceRight = 0;
-    
-    int temp = 5;
-    leftcount = rightcount = &temp;
     get_motor_encoders(leftcount, rightcount);
     int initialLeft = *leftcount;
     int initialRight = *rightcount;
@@ -173,7 +175,8 @@ int main()
 
 	while(i < 4)
 	{
-		//straightLine(1, speed1);
+        usleep(40000);
+		straightLine(1, speed1);
 		turn(direction, angle, speed2);
 		i++;
 	}
