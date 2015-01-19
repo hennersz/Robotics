@@ -9,9 +9,9 @@
 
 float stoppingPoint (float speed)    //determines when to switch from actual speed to percentage speed
 {
-    if (speed < 25)
+    if (speed < 21)
         return 0.1;
-    else if (speed < 50)
+    else if (speed < 42)
         return 0.2;
     else if (speed < 75)
         return 0.3;
@@ -22,9 +22,11 @@ float stoppingPoint (float speed)    //determines when to switch from actual spe
 }
 void turningProcess(int initialLeft, int initialRight, float target, int leftSign, int rightSign, float speed)
 {
-    int *leftcount, *rightcount;
-    int temp = 0;
-    leftcount = rightcount = &temp;
+
+    int *leftcount = malloc(sizeof(int));
+    int *rightcount = malloc(sizeof(int));
+    int previousLeftCount, previousRightCount;
+    previousRightCount = previousLeftCount = 0;
     float percentageLeft, percentageRight;
     float speedLeft, speedRight;
     int differenceLeft = 0;
@@ -33,9 +35,11 @@ void turningProcess(int initialLeft, int initialRight, float target, int leftSig
     bool corrected = false;
     while (1)
     {
+        previousLeftCount = *leftcount;
+        previousRightCount = *rightcount;
         get_motor_encoders(leftcount, rightcount);
-        differenceLeft = abs(*leftcount - initialLeft);					//represents the angle that is left
-        differenceRight = abs(*rightcount - initialRight);
+        differenceLeft = abs(*leftcount - initialLeft + (*leftcount - previousLeftCount));	//represents the angle that is left
+        differenceRight = abs(*rightcount - initialRight + (*rightcount - previousRightCount));
         percentageLeft = ((target - differenceLeft)/target);		   //percentage of the angle left
         percentageRight = ((target - differenceRight)/target);
         if(percentageLeft > stop || percentageRight > stop)			   //if the angle is still large, turn fast
@@ -80,17 +84,16 @@ void turningProcess(int initialLeft, int initialRight, float target, int leftSig
 
 void turn (char direction, float angle, float speed)
 {
-    int *leftcount, *rightcount;
-    int temp = 0;
-    leftcount = rightcount = &temp;
-    get_motor_encoders(leftcount, rightcount);
-    int initialLeft = *leftcount;
-    int initialRight = *rightcount;
+    int *left = malloc(sizeof(int));
+    int *right = malloc(sizeof(int));
+    get_motor_encoders(left, right);
+    int initialLeft = *left;
+    int initialRight = *right;
     float ratio;
-    if(speed < 70)
-        ratio = 2.33333;						//represents a 1 degree turn in terms of the encoders
-    else
-        ratio = 2.39;							//still need to fix this
+    //if(speed < 70)
+    //    ratio = 2.33333;						//represents a 1 degree turn in terms of the encoders
+    //else
+        ratio = 2.37;							//still need to fix this
     float encoder = ratio*angle;
     if (direction == 'L')
         turningProcess(initialLeft, initialRight, encoder, -1, 1, speed);
@@ -140,37 +143,38 @@ void straightLine(float distance, float speed)
 }
 int main()
 {
-    connect_to_robot();
-    initialize_robot();
-    int i = 0;
-    float angle;
-    float distance;
-    float speed1;
-    float speed2;
-    char direction;
-    
-    /*printf("Enter the distance\n");
-     scanf("%i", &distance);
-     printf("Enter speed (line)\n");
-     scanf("%f", &speed1);
-     printf("Enter turning speed\n");
-     scanf("%f", &speed2);
-     printf("Direction (L/R)\n");
-     scanf(" %c", &direction);
-     printf("Enter the angle\n");
-     scanf("%f", &angle);
-     */
-    distance = 1.0;
-    speed1 = 127;
-    speed2 = 127;
-    direction = 'L';
-    angle = 90;
-    turn('L', 180, 127);
-    
-    while(i < 4)
-    {
-        straightLine(1, speed1);
-        turn(direction, angle, speed2);
-        i++;
-    }
+
+	connect_to_robot();
+	initialize_robot();
+	int i = 0;
+	float angle;
+	float distance;
+	float speed1;
+	float speed2;
+	char direction;
+
+	/*printf("Enter the distance\n");
+	scanf("%i", &distance);
+	printf("Enter speed (line)\n");
+	scanf("%f", &speed1);
+	printf("Enter turning speed\n");
+	scanf("%f", &speed2);
+	printf("Direction (L/R)\n");
+	scanf(" %c", &direction);
+	printf("Enter the angle\n");
+	scanf("%f", &angle);
+	*/
+	distance = 1.0;
+	speed1 = 127;
+	speed2 = 127;
+	direction = 'L';
+	angle = 90;
+	turn('L', 180, 127);
+
+	while(i < 4)
+	{
+		//straightLine(1, speed1);
+		turn(direction, angle, speed2);
+		i++;
+	}
 }
