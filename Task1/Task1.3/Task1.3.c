@@ -97,7 +97,11 @@ void turn (char direction, float angle, float speed)
     get_motor_encoders(left, right);
     int initialLeft = *left;
     int initialRight = *right;
-    float ratio = 2.37;							//represents a 1 degree turn in terms of the encoder
+    float ratio;
+    if (angle > 90)
+        ratio = 2.375;							//represents a 1 degree turn in terms of the encoder
+    else
+        ratio = 2.366;
     float encoder = ratio*angle;
     if (direction == 'L')
         turningProcess(initialLeft, initialRight, encoder, -1, 1, speed, true);
@@ -144,8 +148,8 @@ int main()
 	scanf("%f", &angle);
 	*/
 	distance = 1.0;
-	speed1 = 50;
-	speed2 = 127;
+	speed1 = 20;
+	speed2 = 20;
 	direction = 'L';
 	angle = 90;
 	turn('L', 180, 127);
