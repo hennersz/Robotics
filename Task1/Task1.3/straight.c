@@ -40,7 +40,7 @@ void straight(int targetSpeed, float distance)
     int minimumSpeed = 6; // the fastest the wheels can turn without skipping encoder values
 
     int target = metersToTicks(distance);
-    int stopBegin = 0.3 * target, stopEnd = 0.7 * target; float speedLeft, speedRight;
+    int stopBegin = 0.3 * target, stopEnd = 0.7 * target; float speed;
     get_motor_encoders(left, right);
     int initialLeft = *left;
     int initialRight = *right;
@@ -55,27 +55,23 @@ void straight(int targetSpeed, float distance)
 
         if(distanceTravelled < stopBegin)
         {
-        	speedLeft = ((float)(*differenceLeft + (*left - *previousLeft))/stopBegin) * targetSpeed + 1;
-            speedRight = ((float)(*differenceRight + (*right - *previousRight))/stopBegin) * targetSpeed + 1;
-            if (speedLeft > 127 || speedRight > 127)
-                speedRight = speedLeft = 127;
+        	speed = ((float)(*differenceLeft + (*left - *previousLeft))/stopBegin) * targetSpeed + 1;
+            if (speed > 127)
+                speed = 127;
         }
         else if(distanceTravelled > stopEnd)
         {
-            speedLeft = ((float)(target - (*differenceLeft + (*left - *previousLeft))/target)) * targetSpeed + 1;
-            speedRight = ((float)(target - (*differenceRight + (*right - *previousRight))/stopEnd)) * targetSpeed + 1;
-            if (speedLeft > 127 || speedRight > 127)
-                speedRight = speedLeft = 127;
+            speed = ((float)(target - (*differenceLeft + (*left - *previousLeft)))/target) * targetSpeed + 1;
+            if (speed > 127)
+                speed = 127;
+            else if(speed < minimumSpeed)
+                speed = minimumSpeed;
         }
-        printf("L\t%i\t%i\t%f\t%f\t%i\n", *differenceLeft, *differenceRight, speedLeft, speedRight, distanceTravelled);
-        set_motors((int)speedLeft, (int)speedLeft);
+        set_motors((int)speed, (int)speed);
         if(*differenceRight>=target||*differenceLeft>=target)
         {
             reachedTarget = true;
         }
     }
-    free(left);
-    free(right);
-    free(differenceLeft);
-    free(differenceRight);
+    free(left); free(right); free(differenceLeft); free(differenceRight); free(previousLeft); free(previousRight);
 }

@@ -102,7 +102,7 @@ void turn (char direction, float angle, float speed)
     get_motor_encoders(left, right);
     int initialLeft = *left;
     int initialRight = *right;
-    float ratio = 2.375;							//represents a 1 degree turn in terms of the encoder
+    float ratio = 2.369;							//represents a 1 degree turn in terms of the encoder
     float encoder = ratio*angle;
     if (direction == 'L')
         turningProcess(initialLeft, initialRight, encoder,direction, speed);
@@ -116,28 +116,25 @@ int main()
 {   
     connect_to_robot();
 	initialize_robot();
-	//int i = 0;
 	float angle;
 	float distance;
 	int speed1;
 	float speed2;
 	char direction;
+    int i = 0;
 
 	distance = 1.0;
-	speed1 = 127;
-	speed2 = 127;
+	speed1 = 50;
+	speed2 = 50;
 	direction = 'L';
 	angle = 90;
 
-    printf("Starting");
     turn(direction,180,speed2);
-    straight(127, 1.0);
-    turn(direction,90,speed2);
-    //straight(127, 1.0);
-    turn(direction,90,speed2);
-    //straight(127, 1.0);
-    turn(direction,90,speed2);
-    //straight(127, 1.0);
-    turn(direction,90,speed2);
+    while (i < 4)
+    {
+        straight(speed1, 1.0);
+        turn(direction,90,speed2);
+        i++;
+    }
     return 0;
 }
