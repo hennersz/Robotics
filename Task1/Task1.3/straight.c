@@ -76,7 +76,6 @@ void straight(int targetSpeed, float distance)
             reachedTarget = true;
         }
     }
-    set_motors(0,0);
     free(left);
     free(right);
     free(differenceLeft);
