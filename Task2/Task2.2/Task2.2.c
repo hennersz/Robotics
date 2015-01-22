@@ -13,25 +13,25 @@ bool set_ir_angles(int *left, int *right, bool decreasing)
 {
 	if(*left == 90 && *right == 90)
 	{
-		*left -= 20;
-		*right -= 20;
+		*left -= 10;
+		*right -= 10;
 		return !decreasing;
 	}
 	else if(*left == -90 && *right == -90)
 	{
-		*left += 20;
-		*right += 20;
+		*left += 10;
+		*right += 10;
 		return !decreasing;
 	}
 	else if (decreasing)
 	{
-		*left -= 20;
-		*right -= 20;
+		*left -= 10;
+		*right -= 10;
 	}
 	else
 	{
-		*left += 20;
-		*right += 20;
+		*left += 10;
+		*right += 10;
 	}
 	set_ir_angle(0, *left);
 	set_ir_angle(1, *right);
@@ -57,7 +57,7 @@ int motor(int *frontleft, int *sideleft, int* frontright, int *sideright, int sp
 	else
 		return speed - 10;
 }
-
+/*
 void checkCrash(int *leftIR, int *leftEncoder, int previousLeft, int *rightIR, int *rightEncoder, int previousRight)
 {
 	if((*leftEncoder - previousLeft) == 0 || (*rightEncoder - previousRight == 0))
@@ -73,7 +73,7 @@ void checkCrash(int *leftIR, int *leftEncoder, int previousLeft, int *rightIR, i
 			turn('L', 127, 90);
 	}
 }
-
+*/
 void wallFollower(int speed)
 {
 	int *frontleft = malloc(sizeof(int));
@@ -85,14 +85,14 @@ void wallFollower(int speed)
 	int *leftEncoder = malloc(sizeof(int));
 	int *rightEncoder = malloc(sizeof(int));
 
-	*irRight = *irLeft = -10;
+	*irRight = *irLeft = 0;
 	bool decreasing = false;
 
 	int left, right;
 
 	while(1)
 	{
-		//decreasing = set_ir_angles(irLeft, irRight, decreasing);
+		decreasing = set_ir_angles(irLeft, irRight, decreasing);
 		get_motor_encoders(leftEncoder, rightEncoder);
 		get_front_ir_dists(frontleft, frontright);
 		get_side_ir_dists(sideleft, sideright);
@@ -110,6 +110,6 @@ int main()
 	connect_to_robot();
 	initialize_robot();
 
-	wallFollower(40);
+	wallFollower(30);
 
 }

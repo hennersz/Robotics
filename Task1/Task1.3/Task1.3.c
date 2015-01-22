@@ -205,7 +205,7 @@ int main()
 	int speed1;
 	float speed2;
 	char direction;
-
+    usleep(20000);
 	/*printf("Enter the distance\n");
 	scanf("%i", &distance);
 	printf("Enter speed (line)\n");
@@ -222,6 +222,7 @@ int main()
 	speed2 = 127;
 	direction = 'L';
 	angle = 90;
+<<<<<<< Updated upstream
     
     turn(direction,180,speed2);
     straight(speed1, 0.5);
@@ -232,4 +233,8 @@ int main()
     turn(direction,45,speed2);
     turn(direction,45,speed2);
     return 0;
+=======
+    printf("Starting");
+    turn(direction,180,speed2);
+>>>>>>> Stashed changes
 }
