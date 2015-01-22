@@ -116,11 +116,11 @@ void straightLine(float distance, float speed)
     int initialRight = *right;
     float targetDistance = abs(1194 * distance);     // 1 m is 1194 clicks
     int forward = (int)(distance/abs(distance));
-    
     turningProcess(initialLeft, initialRight, targetDistance, forward, forward, speed, false);
     free(left);
     free(right);
 }
+
 int main()
 {   
     connect_to_robot();
@@ -144,12 +144,14 @@ int main()
 	scanf("%f", &angle);
 	*/
 	distance = 1.0;
-	speed1 = 50;
+	speed1 = 10;
 	speed2 = 127;
 	direction = 'L';
 	angle = 90;
 	turn('L', 180, 127);
-
+    
+    straight(speed1,1);
+    /*
 	while(i < 4)
 	{
         usleep(20000);
@@ -158,4 +160,5 @@ int main()
 		turn(direction, angle, speed2);
 		i++;
 	}
+     */
 }
