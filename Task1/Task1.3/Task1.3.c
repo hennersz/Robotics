@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <stdbool.h>
 #include "picomms.h"
+#include "straight.h"
 
 float stoppingPoint (float speed)    //determines when to switch from actual speed to percentage speed
 {
@@ -132,7 +133,7 @@ int main()
 	int i = 0;
 	float angle;
 	float distance;
-	float speed1;
+	int speed1;
 	float speed2;
 	char direction;
 
@@ -148,16 +149,11 @@ int main()
 	scanf("%f", &angle);
 	*/
 	distance = 1.0;
-<<<<<<< HEAD
-	speed1 = 10;
+	speed1 = 127;
 	speed2 = 127;
-=======
-	speed1 = 20;
-	speed2 = 20;
->>>>>>> FETCH_HEAD
 	direction = 'L';
 	angle = 90;
-	turn('L', 180, 127);
+	turn('L', 90, 127);
     
     straight(speed1,1);
     /*
