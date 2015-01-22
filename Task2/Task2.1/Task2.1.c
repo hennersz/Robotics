@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <stdbool.h>
+#include <math.h>
 #include "picomms.h"
 
 float stoppingPoint (float speed)    //determines when to switch from actual speed to percentage speed
@@ -119,55 +120,23 @@ void straightLine(float distance, float speed)
     int initialLeft = *left;
     int initialRight = *right;
     float targetDistance = abs(1194 * distance);     // 1 m is 1194 clicks
-    int forward = (int)(distance/abs(distance));
+    float tempDistance = abs(distance);
+    int forward = (int)(distance/fabs(distance));
+    printf("distance = %f \t tempDistance = %f\t foward = %i\n", distance, tempDistance, forward);
+    
     turningProcess(initialLeft, initialRight, targetDistance, forward, forward, speed, false);
     free(left);
     free(right);
 }
-
 int main()
 {   
     connect_to_robot();
 	initialize_robot();
-	int i = 0;
-	float angle;
-	float distance;
-	float speed1;
-	float speed2;
-	char direction;
 
-	/*printf("Enter the distance\n");
-	scanf("%i", &distance);
-	printf("Enter speed (line)\n");
-	scanf("%f", &speed1);
-	printf("Enter turning speed\n");
-	scanf("%f", &speed2);
-	printf("Direction (L/R)\n");
-	scanf(" %c", &direction);
-	printf("Enter the angle\n");
-	scanf("%f", &angle);
-	*/
-	distance = 1.0;
-<<<<<<< HEAD
-	speed1 = 10;
-	speed2 = 127;
-=======
-	speed1 = 20;
-	speed2 = 20;
->>>>>>> FETCH_HEAD
-	direction = 'L';
-	angle = 90;
-	turn('L', 180, 127);
-    
-    straight(speed1,1);
-    /*
-	while(i < 4)
-	{
-        usleep(20000);
-		straightLine(distance, speed1);
-        usleep(20000);
-		turn(direction, angle, speed2);
-		i++;
-	}
-     */
+    turn('L', 180, 127);
+    straightLine(1, 50);
+    turn('L', 135, 127);
+    straightLine(0.707, 50);
+    turn('L', 90, 127);
+    straightLine(0.707, 50);
 }

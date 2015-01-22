@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <stdbool.h>
+#include <math.h>
 #include "picomms.h"
 
 float stoppingPoint (float speed)    //determines when to switch from actual speed to percentage speed
@@ -41,11 +42,11 @@ void turningProcess(int initialLeft, int initialRight, float target, int leftSig
         previousLeftCount = *leftcount;
         previousRightCount = *rightcount;
         get_motor_encoders(leftcount, rightcount);
-        differenceLeft = abs(*leftcount - initialLeft + (*leftcount - previousLeftCount));	//represents the angle that is left
+        differenceLeft = abs(*leftcount - initialLeft + (*leftcount - previousLeftCount));  //represents the angle that is left
         differenceRight = abs(*rightcount - initialRight + (*rightcount - previousRightCount));
-        percentageLeft = ((target - differenceLeft)/target);		   //percentage of the angle left
+        percentageLeft = ((target - differenceLeft)/target);           //percentage of the angle left
         percentageRight = ((target - differenceRight)/target);
-        if(percentageLeft > stop || percentageRight > stop)			   //if the angle is still large, turn fast
+        if(percentageLeft > stop || percentageRight > stop)            //if the angle is still large, turn fast
         {
             speedLeft = speed * leftSign;
             speedRight = speed * rightSign;
@@ -55,8 +56,8 @@ void turningProcess(int initialLeft, int initialRight, float target, int leftSig
             speedLeft = speed * rightSign;
             speedRight = speed * leftSign;
         }
-        else														  //if it approaches the end of angle, travel
-        {															  //at propertional speed to the angle left
+        else                                                          //if it approaches the end of angle, travel
+        {                                                             //at propertional speed to the angle left
             speedLeft = (percentageLeft*speed*leftSign) + leftSign;
             speedRight = (percentageRight*speed*rightSign) + rightSign;
             if((speedLeft > -1 && speedLeft < 1) && (speedRight > -1 && speedRight < 1) && turning)
@@ -71,7 +72,7 @@ void turningProcess(int initialLeft, int initialRight, float target, int leftSig
         else
             printf("L\t%i\t%i\t%f\t%f\n", differenceLeft, differenceRight, speedLeft, speedRight);
         
-        if (differenceLeft == (int)target && differenceRight == (int)target) 	                //it reached the desired angle
+        if (differenceLeft == (int)target && differenceRight == (int)target)                    //it reached the desired angle
         {
             if(speed > 65 && corrected == true)
             {
@@ -81,9 +82,9 @@ void turningProcess(int initialLeft, int initialRight, float target, int leftSig
             else if(speed < 65)
                 break;
         }
-        else if (differenceLeft > target && differenceRight > target)	        		//travelled too far
+        else if (differenceLeft > target && differenceRight > target)                   //travelled too far
             set_motors((int)speedLeft, (int)speedRight);
-        else																			//still needs to travel
+        else                                                                            //still needs to travel
             set_motors((int)speedLeft, (int)speedRight);
     }
     free(leftcount);
@@ -99,7 +100,7 @@ void turn (char direction, float angle, float speed)
     int initialRight = *right;
     float ratio;
     if (angle > 90)
-        ratio = 2.375;							//represents a 1 degree turn in terms of the encoder
+        ratio = 2.375;                          //represents a 1 degree turn in terms of the encoder
     else
         ratio = 2.366;
     float encoder = ratio*angle;
@@ -119,55 +120,10 @@ void straightLine(float distance, float speed)
     int initialLeft = *left;
     int initialRight = *right;
     float targetDistance = abs(1194 * distance);     // 1 m is 1194 clicks
-    int forward = (int)(distance/abs(distance));
+    int forward = (int)(distance/fabs(distance));
+
+    
     turningProcess(initialLeft, initialRight, targetDistance, forward, forward, speed, false);
     free(left);
     free(right);
-}
-
-int main()
-{   
-    connect_to_robot();
-	initialize_robot();
-	int i = 0;
-	float angle;
-	float distance;
-	float speed1;
-	float speed2;
-	char direction;
-
-	/*printf("Enter the distance\n");
-	scanf("%i", &distance);
-	printf("Enter speed (line)\n");
-	scanf("%f", &speed1);
-	printf("Enter turning speed\n");
-	scanf("%f", &speed2);
-	printf("Direction (L/R)\n");
-	scanf(" %c", &direction);
-	printf("Enter the angle\n");
-	scanf("%f", &angle);
-	*/
-	distance = 1.0;
-<<<<<<< HEAD
-	speed1 = 10;
-	speed2 = 127;
-=======
-	speed1 = 20;
-	speed2 = 20;
->>>>>>> FETCH_HEAD
-	direction = 'L';
-	angle = 90;
-	turn('L', 180, 127);
-    
-    straight(speed1,1);
-    /*
-	while(i < 4)
-	{
-        usleep(20000);
-		straightLine(distance, speed1);
-        usleep(20000);
-		turn(direction, angle, speed2);
-		i++;
-	}
-     */
 }
