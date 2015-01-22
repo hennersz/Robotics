@@ -30,6 +30,7 @@ void getDifference(int* left, int initialLeft, int* differenceLeft,int* right, i
 //takes the speed and the distance you want to travel in meters
 void straight(int targetSpeed, float distance)
 {
+    
 	//intialse the pointers needed to get motor encoder values and measure how far it has turned
     int *left = malloc(sizeof(int));
     int *right = malloc(sizeof(int));
@@ -52,6 +53,7 @@ void straight(int targetSpeed, float distance)
 
     int distanceTravelled;
     bool reachedTarget = false;
+    printf("straight");
 
     while(!reachedTarget)
     {
