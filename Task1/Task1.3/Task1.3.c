@@ -76,6 +76,7 @@ void straight(int targetSpeed, float distance)
             reachedTarget = true;
         }
     }
+    set_motors(0, 0);
     free(left);
     free(right);
     free(differenceLeft);
@@ -206,30 +207,21 @@ int main()
 	float speed2;
 	char direction;
 
-	/*printf("Enter the distance\n");
-	scanf("%i", &distance);
-	printf("Enter speed (line)\n");
-	scanf("%f", &speed1);
-	printf("Enter turning speed\n");
-	scanf("%f", &speed2);
-	printf("Direction (L/R)\n");
-	scanf(" %c", &direction);
-	printf("Enter the angle\n");
-	scanf("%f", &angle);
-	*/
 	distance = 1.0;
 	speed1 = 127;
 	speed2 = 127;
 	direction = 'L';
 	angle = 90;
     
-    turn(direction,180,speed2);
-    straight(speed1, 0.5);
-    straight(speed1,0.5);
-    usleep(1000000);
+    turn(direction,90,speed2);
+    straight(speed1, 1);
     
+    //straight(speed1,1);
+    turn(direction,90,speed2);
+    //straight(speed1,1);
+    //turn(direction,90,speed2);
+    //straight(speed1,1);
+
     
-    turn(direction,45,speed2);
-    turn(direction,45,speed2);
     return 0;
 }
