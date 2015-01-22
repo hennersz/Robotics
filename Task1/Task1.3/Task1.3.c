@@ -7,83 +7,6 @@
 #include <stdbool.h>
 #include "picomms.h"
 
-int calculateAcceleration(int startSpeed, int endSpeed, int distance)
-{
-    int difference = endSpeed - startSpeed;
-    int acceleration = difference/distance;
-    
-    return acceleration;
-}
-
-int metersToTicks(float distance)//takes distance in meters
-{
-    float ticks = 1194*distance; //1194 is the ratio from ticks to meters
-    return (int)ticks;
-}
-void getDifference(int* left, int initialLeft, int* differenceLeft,int* right, int initialRight, int* differenceRight)
-{
-    get_motor_encoders(left, right);
-    *differenceLeft = *left-initialLeft;
-    *differenceRight = *right-initialRight;
-}
-
-//takes the speed and the distance you want to travel in meters
-void straight(int targetSpeed, float distance)
-{
-    
-    //intialse the pointers needed to get motor encoder values and measure how far it has turned
-    int *left = malloc(sizeof(int));
-    int *right = malloc(sizeof(int));
-    int *differenceLeft = malloc(sizeof(int));
-    int *differenceRight = malloc(sizeof(int));
-    
-    int minimumSpeed = 6; // the fastest the wheels can turn without skipping encoder values
-    
-    int target = metersToTicks(distance);
-    int accelerationZone = 0.1*target;
-    int deccelerationZone = 0.9*target;
-    int acceleration = calculateAcceleration(0,targetSpeed,accelerationZone);
-    int decelleration = calculateAcceleration(targetSpeed,minimumSpeed,accelerationZone);
-    
-    int speed = 0;
-    
-    get_motor_encoders(left, right);
-    int initialLeft = *left;
-    int initialRight = *right;
-    
-    int distanceTravelled;
-    bool reachedTarget = false;
-    printf("straight");
-    
-    while(!reachedTarget)
-    {
-        log_trail();
-        getDifference(left, initialLeft, differenceLeft, right, initialRight, differenceRight);
-        distanceTravelled = (*differenceLeft+*differenceRight)/2;
-        if(speed<targetSpeed)
-        {
-            log_trail();
-            speed+=acceleration;
-        }
-        else if(distanceTravelled>=deccelerationZone && speed>minimumSpeed)
-        {
-            log_trail();
-            speed+=decelleration;
-        }
-        set_motors(speed, speed);
-        if(*differenceRight>=target||*differenceLeft>=target)
-        {
-            reachedTarget = true;
-        }
-    }
-    free(left);
-    free(right);
-    free(differenceLeft);
-    free(differenceRight);
-    fflush(stdout);
-}
-
-
 float stoppingPoint (float speed)    //determines when to switch from actual speed to percentage speed
 {
     if (speed < 21)
@@ -97,31 +20,24 @@ float stoppingPoint (float speed)    //determines when to switch from actual spe
     else
         return 0.5;
 }
-
-void wheelSigns(char direction, int* leftSign, int* rightSign)
-{
-    if (direction == 'L')
-    {
-        *leftSign = -1;
-        *rightSign = 1;
-    }
-    else
-    {
-        *leftSign = 1;
-        *rightSign = -1;
-    }
-}
-
-void turningProcess(int initialLeft, int initialRight, float target, char direction, float speed)
+void turningProcess(int initialLeft, int initialRight, float target, int leftSign, int rightSign, float speed, bool turning)
 {
     
-    int *leftcount = malloc(sizeof(int)), *rightcount = malloc(sizeof(int)), *leftSign = malloc(sizeof(int)), *rightSign = malloc(sizeof(int));
-    int previousLeftCount = 0, previousRightCount = 0,differenceRight = 0,differenceLeft = 0;
-    float percentageLeft, percentageRight, speedLeft, speedRight, stop = stoppingPoint(speed);
+    int *leftcount = malloc(sizeof(int));
+    int *rightcount = malloc(sizeof(int));
+    int previousLeftCount, previousRightCount;
+    previousRightCount = previousLeftCount = 0;
+    float percentageLeft, percentageRight;
+    float speedLeft, speedRight;
+    int differenceLeft = 0;
+    int differenceRight = 0;
+    float stop = stoppingPoint(speed);
     bool corrected = false;
-    wheelSigns(direction, leftSign, rightSign);
+    if (!turning)
+        corrected = true;
     while (1)
     {
+        log_trail();
         previousLeftCount = *leftcount;
         previousRightCount = *rightcount;
         get_motor_encoders(leftcount, rightcount);
@@ -131,25 +47,29 @@ void turningProcess(int initialLeft, int initialRight, float target, char direct
         percentageRight = ((target - differenceRight)/target);
         if(percentageLeft > stop || percentageRight > stop)			   //if the angle is still large, turn fast
         {
-            speedLeft = speed * *leftSign;
-            speedRight = speed * *rightSign;
+            speedLeft = speed * leftSign;
+            speedRight = speed * rightSign;
         }
         else if(percentageLeft < -stop || percentageRight < -stop)
         {
-            speedLeft = speed * *rightSign;
-            speedRight = speed * *leftSign;
+            speedLeft = speed * rightSign;
+            speedRight = speed * leftSign;
         }
         else														  //if it approaches the end of angle, travel
         {															  //at propertional speed to the angle left
-            speedLeft = (percentageLeft*speed*(*leftSign)) + *leftSign;
-            speedRight = (percentageRight*speed*(*rightSign)) + *rightSign;
-            if((speedLeft > -1 && speedLeft < 1) && (speedRight > -1 && speedRight < 1))
+            speedLeft = (percentageLeft*speed*leftSign) + leftSign;
+            speedRight = (percentageRight*speed*rightSign) + rightSign;
+            if((speedLeft > -1 && speedLeft < 1) && (speedRight > -1 && speedRight < 1) && turning)
             {
                 corrected = true;
-                speedLeft = *rightSign;
-                speedRight = *leftSign;
+                speedLeft = rightSign;
+                speedRight = leftSign;
             }
         }
+        if(turning)
+            printf("T\t%i\t%i\t%f\t%f\n", differenceLeft, differenceRight, speedLeft, speedRight);  //T for turn
+        else
+            printf("L\t%i\t%i\t%f\t%f\n", differenceLeft, differenceRight, speedLeft, speedRight);
         
         if (differenceLeft == (int)target && differenceRight == (int)target) 	                //it reached the desired angle
         {
@@ -168,33 +88,39 @@ void turningProcess(int initialLeft, int initialRight, float target, char direct
     }
     free(leftcount);
     free(rightcount);
-    free(leftSign);
-    free(rightSign);
-    fflush(stdout);
 }
 
 void turn (char direction, float angle, float speed)
 {
-    printf("turn");
     int *left = malloc(sizeof(int));
     int *right = malloc(sizeof(int));
     get_motor_encoders(left, right);
     int initialLeft = *left;
     int initialRight = *right;
-    float ratio;
-    if (angle > 90)
-        ratio = 2.375;							//represents a 1 degree turn in terms of the encoder
-    else
-        ratio = 2.366;
+    float ratio = 2.37;							//represents a 1 degree turn in terms of the encoder
     float encoder = ratio*angle;
     if (direction == 'L')
-        turningProcess(initialLeft, initialRight, encoder,direction, speed);
+        turningProcess(initialLeft, initialRight, encoder, -1, 1, speed, true);
     else if (direction == 'R')
-        turningProcess(initialLeft, initialRight, encoder,direction, speed);
+        turningProcess(initialLeft, initialRight, encoder, 1, -1, speed, true);
     free(left);
     free(right);
 }
 
+void straightLine(float distance, float speed)
+{
+    int *left = malloc(sizeof(int));
+    int *right = malloc(sizeof(int));
+    get_motor_encoders(left, right);
+    int initialLeft = *left;
+    int initialRight = *right;
+    float targetDistance = abs(1194 * distance);     // 1 m is 1194 clicks
+    int forward = (int)(distance/abs(distance));
+    
+    turningProcess(initialLeft, initialRight, targetDistance, forward, forward, speed, false);
+    free(left);
+    free(right);
+}
 int main()
 {   
     connect_to_robot();
@@ -202,10 +128,10 @@ int main()
 	int i = 0;
 	float angle;
 	float distance;
-	int speed1;
+	float speed1;
 	float speed2;
 	char direction;
-    usleep(20000);
+
 	/*printf("Enter the distance\n");
 	scanf("%i", &distance);
 	printf("Enter speed (line)\n");
@@ -218,23 +144,18 @@ int main()
 	scanf("%f", &angle);
 	*/
 	distance = 1.0;
-	speed1 = 127;
+	speed1 = 50;
 	speed2 = 127;
 	direction = 'L';
 	angle = 90;
-<<<<<<< Updated upstream
-    
-    turn(direction,180,speed2);
-    straight(speed1, 0.5);
-    straight(speed1,0.5);
-    usleep(1000000);
-    
-    
-    turn(direction,45,speed2);
-    turn(direction,45,speed2);
-    return 0;
-=======
-    printf("Starting");
-    turn(direction,180,speed2);
->>>>>>> Stashed changes
+	turn('L', 180, 127);
+
+	while(i < 4)
+	{
+        usleep(20000);
+		straightLine(distance, speed1);
+        usleep(20000);
+		turn(direction, angle, speed2);
+		i++;
+	}
 }
