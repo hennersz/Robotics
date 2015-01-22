@@ -144,11 +144,11 @@ int main()
 	scanf("%f", &angle);
 	*/
 	distance = 1.0;
-	speed1 = 20;
+	speed1 = 50;
 	speed2 = 127;
 	direction = 'L';
 	angle = 90;
-	//turn('L', 180, 127);
+	turn('L', 180, 127);
 
 	while(i < 4)
 	{
