@@ -7,7 +7,6 @@
 #include <stdbool.h>
 #include <math.h>
 #include "picomms.h"
-#include "basicFunctions.h"
 
 bool set_ir_angles(int *left, int *right, bool decreasing)
 {
@@ -57,6 +56,7 @@ int motor(int *frontleft, int *sideleft, int* frontright, int *sideright, int sp
 	else
 		return speed - 10;
 }
+<<<<<<< HEAD
 /*
 void checkCrash(int *leftIR, int *leftEncoder, int previousLeft, int *rightIR, int *rightEncoder, int previousRight)
 {
@@ -74,6 +74,9 @@ void checkCrash(int *leftIR, int *leftEncoder, int previousLeft, int *rightIR, i
 	}
 }
 */
+=======
+
+>>>>>>> parent of 9e95461... Added new function task2.2
 void wallFollower(int speed)
 {
 	int *frontleft = malloc(sizeof(int));
@@ -82,10 +85,14 @@ void wallFollower(int speed)
 	int *sideright = malloc(sizeof(int));
 	int *irLeft = malloc(sizeof(int));
 	int *irRight = malloc(sizeof(int));
+<<<<<<< HEAD
 	int *leftEncoder = malloc(sizeof(int));
 	int *rightEncoder = malloc(sizeof(int));
 
 	*irRight = *irLeft = 0;
+=======
+	*irRight = *irLeft = -10;
+>>>>>>> parent of 9e95461... Added new function task2.2
 	bool decreasing = false;
 
 	int left, right;
@@ -93,10 +100,12 @@ void wallFollower(int speed)
 	while(1)
 	{
 		decreasing = set_ir_angles(irLeft, irRight, decreasing);
+<<<<<<< HEAD
 		get_motor_encoders(leftEncoder, rightEncoder);
+=======
+>>>>>>> parent of 9e95461... Added new function task2.2
 		get_front_ir_dists(frontleft, frontright);
 		get_side_ir_dists(sideleft, sideright);
-
 		left = motor(frontleft, sideleft, frontright, sideright, speed);
 		right = motor(frontright, sideright, frontleft, sideleft, speed);
 
@@ -110,6 +119,10 @@ int main()
 	connect_to_robot();
 	initialize_robot();
 
+<<<<<<< HEAD
 	wallFollower(30);
+=======
+	wallFollower(50);
+>>>>>>> parent of 9e95461... Added new function task2.2
 
 }
