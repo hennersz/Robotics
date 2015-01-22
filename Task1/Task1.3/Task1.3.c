@@ -115,7 +115,6 @@ void turn (char direction, float angle, float speed)
 int main()
 {
     connect_to_robot();
-<<<<<<< HEAD
 	initialize_robot();
 	float angle;
 	float distance;
@@ -130,23 +129,6 @@ int main()
 	direction = 'L';
 	angle = 90;
 
-=======
-    initialize_robot();
-    //int i = 0;
-    float angle;
-    float distance;
-    int speed1;
-    float speed2;
-    char direction;
-    
-    distance = 1.0;
-    speed1 = 127;
-    speed2 = 127;
-    direction = 'L';
-    angle = 90;
-    
-    printf("Starting");
->>>>>>> FETCH_HEAD
     turn(direction,180,speed2);
     while (i < 4)
     {

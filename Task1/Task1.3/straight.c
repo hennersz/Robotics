@@ -55,16 +55,9 @@ void straight(int targetSpeed, float distance)
         
         if(distanceTravelled < stopBegin)
         {
-<<<<<<< HEAD
         	speed = ((float)(*differenceLeft + (*left - *previousLeft))/stopBegin) * targetSpeed + 1;
             if (speed > 127)
                 speed = 127;
-=======
-            speedLeft = ((float)(*differenceLeft + (*left - *previousLeft))/stopBegin) * targetSpeed + 1;
-            speedRight = ((float)(*differenceRight + (*right - *previousRight))/stopBegin) * targetSpeed + 1;
-            if (speedLeft > 127 || speedRight > 127)
-                speedRight = speedLeft = 127;
->>>>>>> FETCH_HEAD
         }
         else if(distanceTravelled > stopEnd)
         {
@@ -76,9 +69,7 @@ void straight(int targetSpeed, float distance)
         }
         set_motors((int)speed, (int)speed);
         if(*differenceRight>=target||*differenceLeft>=target)
-        {
             reachedTarget = true;
-        }
     }
     free(left); free(right); free(differenceLeft); free(differenceRight); free(previousLeft); free(previousRight);
 }
