@@ -66,18 +66,23 @@ void turningProcess(int initialLeft, int initialRight, float target, char direct
             speedRight = speed * *leftSign;
         }
         else														  //if it approaches the end of angle, travel
-        {															  //at propertional speed to the angle left
+        {													  //at propertional speed to the angle left
             speedLeft = (percentageLeft*speed*(*leftSign)) + (*leftSign);
             speedRight = (percentageRight*speed*(*rightSign)) + (*rightSign);
-            if((speedLeft > -1 && speedLeft < 1) && (speedRight > -1 && speedRight < 1))
+            if((speedLeft > -3 && speedLeft < 0) || (speedRight > 0 && speedRight < 2))
             {
                 corrected = true;
-                speedLeft = *rightSign;
-                speedRight = *leftSign;
+                speedLeft = (*rightSign) * 3;
+                speedRight = (*leftSign) * 3;
+            }
+            else if((speedLeft > 0 && speedLeft < 2) || (speedRight < 0 && speedRight > -2))
+            {
+                speedLeft = (*rightSign) * 3;
+                speedRight = (*leftSign) * 3;
             }
         }
         printf("T\t%i\t%i\t%f\t%f\t%f\n", differenceLeft, differenceRight, speedLeft, speedRight, target);
-        if (differenceLeft == (int)target && differenceRight == (int)target) 	                //it reached the desired angle
+        if (differenceLeft == (int)target || differenceRight == (int)target -2) 	                //it reached the desired angle
         {
             if(speed > 65 && corrected == true)             //checks the angle again
             {
@@ -102,7 +107,7 @@ void turn (char direction, float angle, float speed)
     get_motor_encoders(left, right);
     int initialLeft = *left;
     int initialRight = *right;
-    float ratio = 2.369;							//represents a 1 degree turn in terms of the encoder
+    float ratio = 2.333;							//represents a 1 degree turn in terms of the encoder
     float encoder = ratio*angle;
     if (direction == 'L')
         turningProcess(initialLeft, initialRight, encoder,direction, speed);
@@ -129,7 +134,7 @@ int main()
 	direction = 'L';
 	angle = 90;
 
-    turn(direction,180,speed2);
+    //turn(direction,180,speed2);
     while (i < 4)
     {
         straight(speed1, 1.0);
