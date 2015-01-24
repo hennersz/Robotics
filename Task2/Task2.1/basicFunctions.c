@@ -6,9 +6,6 @@
 #include <arpa/inet.h>
 #include <stdbool.h>
 #include "picomms.h"
-#include "straight.h"
-
-
 
 float stoppingPoint (float speed)    //determines when to switch from actual speed to percentage speed
 {
@@ -44,6 +41,7 @@ void turningProcess(int initialLeft, int initialRight, float target, char direct
     int *leftcount = malloc(sizeof(int)), *rightcount = malloc(sizeof(int)), *leftSign = malloc(sizeof(int)), *rightSign = malloc(sizeof(int));
     int previousLeftCount = 0, previousRightCount = 0,differenceRight = 0,differenceLeft = 0;
     float percentageLeft, percentageRight, speedLeft, speedRight, stop = stoppingPoint(speed);
+    bool corrected = false;
     wheelSigns(direction, leftSign, rightSign);
     while (1)
     {
@@ -70,6 +68,7 @@ void turningProcess(int initialLeft, int initialRight, float target, char direct
             speedRight = (percentageRight*speed*(*rightSign)) + (*rightSign);
             if((speedLeft > -3 && speedLeft < 0) || (speedRight > 0 && speedRight < 2))
             {
+                corrected = true;
                 speedLeft = (*rightSign) * 3;
                 speedRight = (*leftSign) * 3;
             }
@@ -79,8 +78,17 @@ void turningProcess(int initialLeft, int initialRight, float target, char direct
                 speedRight = (*leftSign) * 3;
             }
         }
-        if (differenceLeft >= (int)target || differenceRight >= (int)target )                     //it reached the desired angle
-            break;
+        printf("T\t%i\t%i\t%f\t%f\t%f\n", differenceLeft, differenceRight, speedLeft, speedRight, target);
+        if (differenceLeft == (int)target || differenceRight == (int)target)                     //it reached the desired angle
+        {
+            if(speed > 65 && corrected == true)             //checks the angle again
+            {
+                corrected = false;
+                break;
+            }
+            else if(speed < 65)
+                break;
+        }
         else if (differenceLeft > target && differenceRight > target)                   //travelled too far
             set_motors((int)speedLeft, (int)speedRight);
         else                                                                            //still needs to travel
@@ -96,7 +104,7 @@ void turn (char direction, float angle, float speed)
     get_motor_encoders(left, right);
     int initialLeft = *left;
     int initialRight = *right;
-    float ratio = 2.333;                            //represents a 1 degree turn in terms of the encoder
+    float ratio = 2.365;                            //represents a 1 degree turn in terms of the encoder
     float encoder = ratio*angle;
     if (direction == 'L')
         turningProcess(initialLeft, initialRight, encoder,direction, speed);
