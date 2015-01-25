@@ -77,9 +77,19 @@ void checkWalls(int *frontLeft, int *frontRight, int *sideLeft, int *sideRight)	
 	if((*frontLeft < 30 && *frontRight < 30) || *frontRight < 15)  //obstacle in front
 	{
 		if(*sideLeft < *sideRight)
-			turn('R', 10, 127);
+			while((*frontLeft < 30 && *frontRight < 30) || *frontRight < 15)
+            {
+                set_motors(10,-10);
+                get_front_ir_dists(frontLeft, frontRight);
+                get_side_ir_dists(sideLeft, sideRight);
+            }
 		else
-			turn('L', 10, 127);
+            while((*frontLeft < 30 && *frontRight < 30) || *frontRight < 15)
+            {
+                set_motors(-10,10);
+                get_front_ir_dists(frontLeft, frontRight);
+                get_side_ir_dists(sideLeft, sideRight);
+            }
 	}
 }
 
