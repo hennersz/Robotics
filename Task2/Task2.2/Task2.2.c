@@ -98,7 +98,7 @@ int calculateMotorValue(int *frontLeft, int *frontRight, int *backLeft, int *bac
 	int differentialValue = differential(frontLeft, frontRight, backLeft, backRight);
 	int proportionalValue = proportional(frontLeft, backLeft);
 	integralValue = integral(integralValue, proportionalValue);
-	float finalValue = proportionalValue * 2.5 + differentialValue * 90 + integralValue * 0.1;
+	float finalValue = proportionalValue * 2.3 + differentialValue * 90 + integralValue * 0.1;
 	int finalLeftSpeed = speed - finalValue;
 	int finalRightSpeed = speed + finalValue;
 
