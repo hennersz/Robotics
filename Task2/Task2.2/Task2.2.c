@@ -74,17 +74,17 @@ void stopped(int *lBump, int *rBump)
 
 void checkWalls(int *frontLeft, int *frontRight, int *sideLeft, int *sideRight)	//Still not sure about this one!!
 {
-	if((*frontLeft < 30 && *frontRight < 30) || *frontRight < 15)  //obstacle in front
+	if((*frontLeft < 38 && *frontRight < 38) || *frontRight < 15)  //obstacle in front
 	{
 		if(*sideLeft < *sideRight)
-			while((*frontLeft < 30 && *frontRight < 30) || *frontRight < 15)
+			while((*frontLeft < 38 && *frontRight < 38) || *frontRight < 15)
             {
                 set_motors(10,-10);
                 get_front_ir_dists(frontLeft, frontRight);
                 get_side_ir_dists(sideLeft, sideRight);
             }
 		else
-            while((*frontLeft < 30 && *frontRight < 30) || *frontRight < 15)
+            while((*frontLeft < 38 && *frontRight < 38) || *frontRight < 15)
             {
                 set_motors(-10,10);
                 get_front_ir_dists(frontLeft, frontRight);
@@ -94,11 +94,11 @@ void checkWalls(int *frontLeft, int *frontRight, int *sideLeft, int *sideRight)	
 }
 
 int calculateMotorValue(int *frontLeft, int *frontRight, int *backLeft, int *backRight, int integralValue, int speed)
-{																					//PID algorithm
+{																					
 	int differentialValue = differential(frontLeft, frontRight, backLeft, backRight);
 	int proportionalValue = proportional(frontLeft, backLeft);
 	integralValue = integral(integralValue, proportionalValue);
-	float finalValue = proportionalValue * 2.3 + differentialValue * 90 + integralValue * 0.1;
+	float finalValue = proportionalValue * 2.3 + differentialValue * 30 + integralValue * 0.05;
 	int finalLeftSpeed = speed - finalValue;
 	int finalRightSpeed = speed + finalValue;
 
@@ -120,22 +120,17 @@ int calculateMotorValue(int *frontLeft, int *frontRight, int *backLeft, int *bac
 
 void wallFollower(int speed)
 {
-	int *frontleft = malloc(sizeof(int));
-	int *frontright = malloc(sizeof(int));
-	int *sideleft = malloc(sizeof(int));
-	int *sideright = malloc(sizeof(int));
-	int *leftBumper = malloc(sizeof(int));
-	int *rightBumper = malloc(sizeof(int));
+	int frontleft, frontright; 
+	int sideleft, sideright; 
+	int leftBumper,rightBumper;
 	int total = 0;
-	set_ir_angle(1, -30);
+	set_ir_angle(1, -45);
 	while(1)
 	{
-		total = calculateMotorValue(frontleft, frontright, sideleft, sideright, total, speed);
-		checkWalls(frontleft, frontright, sideleft, sideright);
-		stopped(leftBumper, rightBumper);
+		total = calculateMotorValue(&frontleft, &frontright, &sideleft, &sideright, total, speed);
+		checkWalls(&frontleft, &frontright,&sideleft, &sideright);
+		stopped(&leftBumper, &rightBumper);
 	}
-	free(frontleft); free(frontright); free(sideleft); free(sideright);
-	free(leftBumper); free(rightBumper);
 }
 
 int main()
