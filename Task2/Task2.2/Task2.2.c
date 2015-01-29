@@ -5,6 +5,7 @@
 #include <math.h>
 #include "picomms.h"
 #include "basicFunctions.h"
+
 #define TARGETDISTANCE 30
 
 int proportional(int *frontLeft, int *backLeft)		//calculate proportional value of how far the robot is from the wall
