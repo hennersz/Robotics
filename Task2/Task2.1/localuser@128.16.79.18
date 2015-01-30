@@ -19,6 +19,4 @@ int main()
     straight(50, 0.707);
     turn('R', 90, 127);
     straight(50, 0.707);
-
-    return 0;
 }
