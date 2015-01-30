@@ -137,12 +137,3 @@ void wallFollower(int speed)
 		//distanceTravelled(&leftEncoder, &rightEncoder, &x, &y);
 	}
 }
-
-int main()
-{
-	connect_to_robot();
-	initialize_robot();
-
-	wallFollower(60);
-	return 0;
-}
