@@ -147,7 +147,7 @@ void straight(int targetSpeed, float distance)
     int minimumSpeed = 6; // the fastest the wheels can turn without skipping encoder values
     
     int target = metersToTicks(distance);
-    int stopBegin = 0.3 * target, stopEnd = 0.7 * target; float speed;
+    int stopBegin = 0.3 * target, stopEnd = 0.6 * target; float speed;
     get_motor_encoders(left, right);
     int initialLeft = *left;
     int initialRight = *right;
@@ -163,14 +163,14 @@ void straight(int targetSpeed, float distance)
         if(distanceTravelled < stopBegin)
         {
             speed = ((float)(*differenceLeft + (*left - *previousLeft))/stopBegin) * targetSpeed + 1;
-            if (speed > 127)
-                speed = 127;
+            if (speed > targetSpeed)
+                speed = targetSpeed;
         }
         else if(distanceTravelled > stopEnd)
         {
             speed = ((float)(target - (*differenceLeft + (*left - *previousLeft)))/target) * targetSpeed + 1;
-            if (speed > 127)
-                speed = 127;
+            if (speed > targetSpeed)
+                speed = targetSpeed;
             else if(speed < minimumSpeed)
                 speed = minimumSpeed;
         }

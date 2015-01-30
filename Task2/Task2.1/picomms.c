@@ -115,8 +115,8 @@ const char* recv_msg(char *buf, int bufsize) {
     return reply_msg;
 
   while (1) {
-    tv.tv_sec = 1;
-    tv.tv_usec = 0;
+    tv.tv_sec = 0;
+    tv.tv_usec = 200000;
     FD_ZERO(&read_fdset);
     FD_ZERO(&except_fdset);
     FD_SET(sock, &read_fdset);
@@ -139,7 +139,7 @@ const char* recv_msg(char *buf, int bufsize) {
     val = read(sock, readbuf, bufsize-1);
     if (val > 0) {
     } else {
-      /* the write failed - likely the robot was switched off - attempt
+      /* the read failed - likely the robot was switched off - attempt
 	 to reconnect and reinitialize */
       connect_to_robot();
       re_initialize_robot();
@@ -277,7 +277,13 @@ int one_sensor_read(char *sensorname, int *value) {
     /* now we loop, reading until we get the answer to the request we just asked. */
     memset(recvbuf, 0, READBUFLEN);
     while (1) {
-      reply_msg = recv_msg(recvbuf, READBUFLEN);
+      reply_msg = 0;
+      while (reply_msg == 0) {
+	reply_msg = recv_msg(recvbuf, READBUFLEN);
+	if (reply_msg == 0) {
+	  printf("one sensors read failed - retrying\n");
+	}
+      }
 
       /* compare request string to response */
       if (strncmp(reply_msg, sendbuf, strlen(sendbuf)-1)==0) {
@@ -319,7 +325,13 @@ int two_sensor_read(char *sensornames, int *value1, int *value2) {
     /* now we loop, reading until we get the answer to the request we just asked. */
     while (1) {
       memset(recvbuf, 0, READBUFLEN);
-      reply_msg = recv_msg(recvbuf, READBUFLEN);
+      reply_msg = 0;
+      while (reply_msg == 0) {
+	reply_msg = recv_msg(recvbuf, READBUFLEN);
+	if (reply_msg == 0) {
+	  printf("two sensor read failed - retrying\n");
+	}
+      }
 
       /* remove the trailing newline from the request string so we can
 	 compare it to the response */
