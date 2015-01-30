@@ -94,33 +94,7 @@ int calculateMotorValue(int *frontLeft, int *frontRight, int *backLeft, int *bac
 	else 
 		return 0;
 }
-//need to fix angle
-int findAngle(int *leftEncoder, int *rightEncoder)
-{
-	float ratio = 0.21;
-	float temp;
-<<<<<<< HEAD
-	temp = (float)(*leftEncoder - *rightEncoder + 90) * ratio; 
-=======
-	temp = (float)(*leftEncoder - *rightEncoder) * ratio;
->>>>>>> FETCH_HEAD
-	return (int)temp % 360;
-}
 
-/*
-void distanceTravelled(int *leftEncoder, int *rightEncoder, float *x, float *y)
-{
-	int previousLeft = *leftEncoder;
-	int previousRight = *rightEncoder;
-	get_motor_encoders(leftEncoder, rightEncoder);
-	int angle = findAngle(leftEncoder, rightEncoder);
-	float distance = (float)((*leftEncoder - previousLeft) + (*rightEncoder - previousRight)) / 2;
-	printf("Angle = %i\tDistance = %f\n", angle, distance);
-	*x += distance * (cos(angle));
-	*y += distance * (sin(angle));
-	printf("x = %f\t y = %f\n", *x, *y);
-}  
-*/
 void checkWalls(int *frontLeft, int *frontRight, int *sideLeft, int *sideRight, float *x, float *y)	//Still not sure about this one!!
 {
 	if((*frontLeft < 38 && *frontRight < 38) || *frontRight < 15)  //obstacle in front
@@ -170,11 +144,6 @@ int main()
 	connect_to_robot();
 	initialize_robot();
 
-<<<<<<< HEAD
 	wallFollower(60);
-
-=======
-	wallFollower(20);
 	return 0;
->>>>>>> FETCH_HEAD
 }
