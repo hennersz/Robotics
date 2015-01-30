@@ -96,7 +96,7 @@ int calculateMotorValue(int *frontLeft, int *frontRight, int *backLeft, int *bac
 	int differentialValue = differential(frontLeft, frontRight, backLeft, backRight);
 	int proportionalValue = proportional(frontLeft, backLeft);
 	integralValue = integral(integralValue, proportionalValue);
-	float finalValue = proportionalValue * 2.3 + differentialValue * 30 + integralValue * 0.05;
+	float finalValue = proportionalValue * 2.3;// + differentialValue * 30 + integralValue * 0.05;
 	int finalLeftSpeed = speed - finalValue;
 	int finalRightSpeed = speed + finalValue;
 
@@ -118,10 +118,7 @@ int findAngle(int *leftEncoder, int *rightEncoder)
 {
 	float ratio = 0.4286;
 	float temp;
-	if(*leftEncoder >= *rightEncoder)
-		temp = (float)(*leftEncoder - *rightEncoder) * ratio; 
-	else
-		temp = (float)(*rightEncoder - *leftEncoder + 90) * ratio;
+	temp = (float)(*leftEncoder - *rightEncoder + 90) * ratio; 
 	return (int)temp % 360;
 }
 
@@ -154,7 +151,7 @@ void wallFollower(int speed)
 		total = calculateMotorValue(&frontleft, &frontright, &sideleft, &sideright, total, speed);
 		checkWalls(&frontleft, &frontright,&sideleft, &sideright);
 		stopped(&leftBumper, &rightBumper);
-		distanceTravelled(&leftEncoder, &rightEncoder, &x, &y);
+		//distanceTravelled(&leftEncoder, &rightEncoder, &x, &y);
 	}
 }
 
@@ -163,6 +160,6 @@ int main()
 	connect_to_robot();
 	initialize_robot();
 
-	wallFollower(40);
+	wallFollower(60);
 
 }
