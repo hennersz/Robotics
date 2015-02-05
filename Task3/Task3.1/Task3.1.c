@@ -8,7 +8,7 @@
 #define MAXSPEED 127
 float ratio = 0.21;
 
-void calculateRatio(float wheelDiam, float robotDiam)
+/*void calculateRatio(float wheelDiam, float robotDiam)
 {
 	float wheelCirc = wheelDiam * M_PI;
 	float robotCirc = robotDiam * M_PI;
@@ -42,6 +42,7 @@ void distanceTravelled(int *leftEncoder, int *rightEncoder, float *x, float *y)
 	*x += (distance * (sin(radians))) / 12;
 	printf("x = %f\t y = %f\n", *x, *y);
 } 
+*/
 int proportional(int *frontLeft)		//calculate proportional value of how far the robot is from the wall
 {
 	if(*frontLeft > 50)
@@ -154,5 +155,5 @@ int main()
 	float x = 0,y = 0;
 	get_motor_encoders(&leftEncoder, &rightEncoder);
 	wallFollower(80);
-	distanceTravelled(&leftEncoder, &rightEncoder, &x, &y);
+	//distanceTravelled(&leftEncoder, &rightEncoder, &x, &y);
 }
