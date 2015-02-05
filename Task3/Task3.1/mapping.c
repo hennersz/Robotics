@@ -8,12 +8,13 @@
 #define WIDTH 260
 #define WHEELDIAM 96
 
-float calculateRatio()
+float ratio = 0.42;
+
+void calculateRatio()
 {
 	float wheelCirc = WHEELDIAM * M_PI;
 	float robotCirc = WIDTH * M_PI;
 	ratio = 1/(robotCirc/wheelCirc);
-	return ratio;
 }
 
 int findAngle(int leftEncoder, int rightEncoder, float ratio)
@@ -46,13 +47,12 @@ void encoderChange(int* lEnc, int* rEnc, int* deltaL, int* deltaR)
 void straightDistance(int distance, int* x, int* y)
 {
 	int lEnc, rEnc;
-	float ratio = calculateRatio();
 	get_motor_encoders(&lEnc, &rEnc);
 	double degrees = (double)findAngle(lEnc, rEnc, ratio);
 	double radians = toRadians(degrees);
 
-	*y += clicksToCM(distance * (cos(radians)));
-	*x += clicksToCM(distance * (sin(radians))); 
+	*y += clicksToMM(distance * (cos(radians)));
+	*x += clicksToMM(distance * (sin(radians))); 
 }
 
 double angleChange(int deltaL, int deltaR)
