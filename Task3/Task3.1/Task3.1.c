@@ -5,6 +5,7 @@
 #include <math.h>
 #include "picomms.h"
 #define TARGETDISTANCE 25
+#define MAXSPEED 127
 float ratio = 0.21;
 
 void calculateRatio(float wheelDiam, float robotDiam)
@@ -37,8 +38,8 @@ void distanceTravelled(int *leftEncoder, int *rightEncoder, float *x, float *y)
 	//printf("Angle = %i\tDistance = %f\n", angle, distance);
 	double radians = toRadians((double)angle);
 	//printf("Radians = %f\n", radians);
-	*y += (distance * (cos(radians))) / 12;
-	*x += (distance * (sin(radians))) / 12;
+	*y += (distance * (cos(radians))) / 12; // 12 clicks = 1 cm
+	*x += (distance * (sin(radians))) / 12; 
 	printf("x = %f\t y = %f\n", *x, *y);
 } 
 int proportional(int *frontLeft, int *backLeft)		//calculate proportional value of how far the robot is from the wall
@@ -114,14 +115,13 @@ int calculateMotorValue(int *frontLeft, int *frontRight, int *backLeft, int *bac
 	int finalLeftSpeed = speed - finalValue;
 	int finalRightSpeed = speed + finalValue;
 
-	if(finalLeftSpeed < -127 || finalRightSpeed > 127)		//filters high or low speeds
-		set_motors(-127, 127);
-	else if(finalLeftSpeed > 127 || finalRightSpeed < -127)
-		set_motors(127, -127);
-	else if(*backRight < 5)						//if it gets too close to the other wall, turn slightly
-		set_motors(speed - 2, speed + 2);
+	if(finalLeftSpeed < -MAXSPEED || finalRightSpeed > MAXSPEED)		//filters high or low speeds
+		set_motors(-MAXSPEED, MAXSPEED);
+	else if(finalLeftSpeed > MAXSPEED|| finalRightSpeed < -MAXSPEED)
+		set_motors(MAXSPEED, -MAXSPEED);
 	else
 		set_motors(finalLeftSpeed, finalRightSpeed);
+
 	if (integralValue < 100 && integralValue > -100)   //Limit the impact of integral value
 		return integralValue;
 	else 
