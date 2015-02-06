@@ -43,7 +43,7 @@ void encoderChange(int* previousLeft, int* previousRight, int* deltaL, int* delt
 	*deltaR = rEnc - *previousRight;
 	*previousLeft = lEnc;
 	*previousRight = rEnc;
-	printf("Left encoder change = %d, Right encoder change = %d\n", *deltaL, *deltaR);
+	
 }
 
 void straightDistance(int distance, float* x, float* y)
@@ -59,31 +59,30 @@ void straightDistance(int distance, float* x, float* y)
 
 double angleChange(int deltaL, int deltaR)
 {
-	double dl = clicksToMM(deltaL); printf("dL = %f\n", dl);
-	double dr = clicksToMM(deltaR); printf("dR = %f\n", dr);
+	double dl = clicksToMM(deltaL);
+	double dr = clicksToMM(deltaR);
 	double angle = (dl-dr)/WIDTH;
-	printf("Angle change = %f\n", angle);
 	return angle;
 }
 
 void positionChange(double* previousAngle, int deltaL, int deltaR, float* x, float* y)
 {
 	double currentAngle = angleChange(deltaL, deltaR); 
-	double dL = clicksToMM(deltaL);printf("dL = %f\n", dL);
-	double dR = clicksToMM(deltaR); printf("dR = %f\n", dR);
-	double rL = dL/currentAngle; printf("rL = %f\n", rL);
-	double rR = dR/currentAngle; printf("rR = %f\n", rR);
-	double rM = (rL+rR)/2.0; printf("rM = %f\n", rM);
+	double dL = clicksToMM(deltaL);
+	double dR = clicksToMM(deltaR);
+	double rL = dL/currentAngle;
+	double rR = dR/currentAngle;
+	double rM = (rL+rR)/2.0;
 
 	if(*previousAngle == 0)
 	{
-		*x += rM - rM * cos(currentAngle);
-		*y += rM * sin(currentAngle);
+		*x += rM - rM * cos(currentAngle); printf("X += %f\n",rM - rM * cos(currentAngle));
+		*y += rM * sin(currentAngle); printf("Y += %f\n",rM * sin(currentAngle));
 	}
 	else
 	{
-		*x += rM * cos(*previousAngle + currentAngle) - rM * cos(*previousAngle);
-		*y += rM * sin(*previousAngle + currentAngle) - rM * sin(*previousAngle);
+		*x += rM * cos(*previousAngle + currentAngle) - rM * cos(*previousAngle); printf("X += %f\n",rM * cos(*previousAngle + currentAngle) - rM * cos(*previousAngle));
+		*y += rM * sin(*previousAngle + currentAngle) - rM * sin(*previousAngle); printf("Y += %f\n",rM * sin(*previousAngle + currentAngle) - rM * sin(*previousAngle));
 	}
 	*previousAngle += currentAngle;
 }
@@ -92,8 +91,7 @@ void distanceTravelled(double* previousAngle, float* x, float* y, int* previousL
 {
 	int deltaL, deltaR;
 	encoderChange(previousLeft, previousRight, &deltaL, &deltaR);
-	double currentAngle = angleChange(deltaL, deltaR);
-	if(currentAngle == 0)
+	if(deltaL == deltaR)
 	{
 		straightDistance(deltaL, x, y);
 	}
