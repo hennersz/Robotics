@@ -27,7 +27,7 @@ int findAngle(int leftEncoder, int rightEncoder, float ratio)
 double clicksToMM(int clicks)
 {
 	double wheelCirc = WHEELDIAM * M_PI;
-	return wheelCirc/360.0;
+	return clicks*wheelCirc/360.0;
 }
 
 double toRadians(double angle)
@@ -35,54 +35,65 @@ double toRadians(double angle)
 	return (double)(angle * (M_PI/180));
 }
 
-void encoderChange(int* lEnc, int* rEnc, int* deltaL, int* deltaR)
+void encoderChange(int* previousLeft, int* previousRight, int* deltaL, int* deltaR)
 {
-	int previousLeft = *lEnc;
-	int previousRight = *rEnc;
-	get_motor_encoders(lEnc, rEnc);
-	*deltaL = *lEnc - previousLeft;
-	*deltaR = *rEnc - previousRight;
+	int lEnc, rEnc;
+	get_motor_encoders(&lEnc, &rEnc);
+	*deltaL = lEnc - *previousLeft;
+	*deltaR = rEnc - *previousRight;
+	*previousLeft = lEnc;
+	*previousRight = rEnc;
+	printf("Left encoder change = %d, Right encoder change = %d\n", *deltaL, *deltaR);
 }
 
-void straightDistance(int distance, int* x, int* y)
+void straightDistance(int distance, float* x, float* y)
 {
 	int lEnc, rEnc;
 	get_motor_encoders(&lEnc, &rEnc);
 	double degrees = (double)findAngle(lEnc, rEnc, ratio);
 	double radians = toRadians(degrees);
-
-	*y += clicksToMM(distance * (cos(radians)));
-	*x += clicksToMM(distance * (sin(radians))); 
+	distance = clicksToMM(distance);
+	*y += (distance * (cos(radians)));
+	*x += (distance * (sin(radians))); 
 }
 
 double angleChange(int deltaL, int deltaR)
 {
-	double dl = clicksToMM(deltaL);
-	double dr = clicksToMM(deltaR);
+	double dl = clicksToMM(deltaL); printf("dL = %f\n", dl);
+	double dr = clicksToMM(deltaR); printf("dR = %f\n", dr);
 	double angle = (dl-dr)/WIDTH;
+	printf("Angle change = %f\n", angle);
 	return angle;
 }
 
-void positionChange(double* previousAngle, int deltaL, int deltaR, int* x, int* y)
+void positionChange(double* previousAngle, int deltaL, int deltaR, float* x, float* y)
 {
-	double currentAngle = angleChange(deltaL, deltaR);
-	double dL = clicksToMM(deltaL);
-	double dR = clicksToMM(deltaR);
-	double rL = dL/currentAngle;
-	double rR = dR/currentAngle;
-	double rM = (rL+rR)/2;
+	double currentAngle = angleChange(deltaL, deltaR); 
+	double dL = clicksToMM(deltaL);printf("dL = %f\n", dL);
+	double dR = clicksToMM(deltaR); printf("dR = %f\n", dR);
+	double rL = dL/currentAngle; printf("rL = %f\n", rL);
+	double rR = dR/currentAngle; printf("rR = %f\n", rR);
+	double rM = (rL+rR)/2.0; printf("rM = %f\n", rM);
 
-	*x += rM * cos(*previousAngle + currentAngle) - rM * cos(*previousAngle);
-	*y += rM * sin(*previousAngle + currentAngle) - rM * sin(*previousAngle);
+	if(*previousAngle == 0)
+	{
+		*x += rM - rM * cos(currentAngle);
+		*y += rM * sin(currentAngle);
+	}
+	else
+	{
+		*x += rM * cos(*previousAngle + currentAngle) - rM * cos(*previousAngle);
+		*y += rM * sin(*previousAngle + currentAngle) - rM * sin(*previousAngle);
+	}
 	*previousAngle += currentAngle;
 }
 
-void distanceTravelled(double* previousAngle, int* x, int* y)
+void distanceTravelled(double* previousAngle, float* x, float* y, int* previousLeft, int* previousRight)
 {
-	int lEnc, rEnc, deltaL, deltaR;
-	get_motor_encoders(&lEnc, &rEnc);
-	encoderChange(&lEnc, &rEnc, &deltaL, &deltaR);
-	if(deltaL == deltaR)
+	int deltaL, deltaR;
+	encoderChange(previousLeft, previousRight, &deltaL, &deltaR);
+	double currentAngle = angleChange(deltaL, deltaR);
+	if(currentAngle == 0)
 	{
 		straightDistance(deltaL, x, y);
 	}
@@ -90,4 +101,5 @@ void distanceTravelled(double* previousAngle, int* x, int* y)
 	{
 		positionChange(previousAngle, deltaL, deltaR, x, y);
 	}
+	printf("X:%.0f MM , Y: %.0f MM\n", *x, *y);
 }

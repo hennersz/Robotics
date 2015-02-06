@@ -4,44 +4,12 @@
 #include <stdbool.h>
 #include <math.h>
 #include "picomms.h"
-#define TARGETDISTANCE 20
+#include "mapping.h"
+
+#define TARGETDISTANCE 35
+#define STOPPINGDISTANCE 13
 #define MAXSPEED 127
-float ratio = 0.21;
 
-void calculateRatio(float wheelDiam, float robotDiam)
-{
-	float wheelCirc = wheelDiam * M_PI;
-	float robotCirc = robotDiam * M_PI;
-	ratio = 1/(robotCirc/wheelCirc);
-}
-
-int findAngle(int *leftEncoder, int *rightEncoder)
-{
-	float temp;
-	temp = (float)(*leftEncoder - *rightEncoder)/2.0 * ratio;
-	return (int)temp % 360;
-}
-
-double toRadians(double angle)
-{
-	return (double)(angle * (M_PI/180));
-}
-
-
-void distanceTravelled(int *leftEncoder, int *rightEncoder, float *x, float *y)
-{
-	int previousLeft = *leftEncoder;
-	int previousRight = *rightEncoder;
-	get_motor_encoders(leftEncoder, rightEncoder);
-	int angle = findAngle(leftEncoder, rightEncoder);
-	float distance = (float)((*leftEncoder - previousLeft) + (*rightEncoder - previousRight)) / 2;
-	//printf("Angle = %i\tDistance = %f\n", angle, distance);
-	double radians = toRadians((double)angle);
-	//printf("Radians = %f\n", radians);
-	*y += (distance * (cos(radians))) / 12;
-	*x += (distance * (sin(radians))) / 12;
-	printf("x = %f\t y = %f\n", *x, *y);
-} 
 int proportional(int *frontLeft)		//calculate proportional value of how far the robot is from the wall
 {
 	if(*frontLeft > 50)
@@ -126,22 +94,22 @@ void wallFollower(int speed)
 {
 	int frontleft, frontright, finalSpeed;
 	int leftBumper,rightBumper;
-	int leftEncoder, rightEncoder;
+	int previousLeft, previousRight;
+	double previousAngle = 0;
 	float x= 0, y = 0;
 	int total = 0;
 	set_ir_angle(1, -45);
-	get_motor_encoders(&leftEncoder, &rightEncoder);
 	while(1)
 	{
+		distanceTravelled(&previousAngle, &x, &y, &previousLeft, &previousRight);
 		finalSpeed = calculateMotorValue(&frontleft, &frontright, &total, speed);
 		stopped(&leftBumper, &rightBumper);
 		checkWalls(frontleft, frontright, speed, finalSpeed);
-		if(frontright <= 10)
+		if(frontright <= STOPPINGDISTANCE)
 		{
 			set_motors(0, 0);
 			break;
 		}
-		//distanceTravelled(&leftEncoder, &rightEncoder, &x, &y);
 	}
 }
 
@@ -151,8 +119,6 @@ int main()
 	initialize_robot();
 	//calculateRatio(96.0, 260.0);
 	int leftEncoder, rightEncoder;
-	float x = 0,y = 0;
 	get_motor_encoders(&leftEncoder, &rightEncoder);
-	wallFollower(80);
-	distanceTravelled(&leftEncoder, &rightEncoder, &x, &y);
+	wallFollower(50);
 }
