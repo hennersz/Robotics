@@ -73,7 +73,7 @@ void wallFollower(int speed)
 {
 	int frontleft, frontright, finalSpeed;
 	int leftBumper,rightBumper;
-	int previousLeft, previousRight;
+	int previousLeft = 0, previousRight = 0;
 	double previousAngle = 0;
 	float x= 0, y = 0;
 	int total = 0;
