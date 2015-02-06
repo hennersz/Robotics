@@ -99,4 +99,8 @@ int main()
 	
 	wallFollower(50);
 	return 0;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> FETCH_HEAD
