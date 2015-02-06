@@ -4,9 +4,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include "picomms.h"
-<<<<<<< HEAD
 #include "mapping.h"
-=======
 #define TARGETDISTANCE 20
 #define MAXSPEED 127
 float ratio = 0.21;
@@ -52,7 +50,6 @@ void distanceTravelled(int *leftEncoder, int *rightEncoder, float *x, float *y)
 	printf("x = %f\t y = %f\n", *x, *y);
 } 
 */
->>>>>>> FETCH_HEAD
 int proportional(int *frontLeft)		//calculate proportional value of how far the robot is from the wall
 {
 	if(*frontLeft > 50)
@@ -163,10 +160,5 @@ int main()
 	//calculateRatio(96.0, 260.0);
 	int leftEncoder, rightEncoder;
 	get_motor_encoders(&leftEncoder, &rightEncoder);
-<<<<<<< HEAD
 	wallFollower(50);
-=======
-	wallFollower(80);
-	//distanceTravelled(&leftEncoder, &rightEncoder, &x, &y);
->>>>>>> FETCH_HEAD
 }
