@@ -41,11 +41,6 @@ void stopped(int *lBump, int *rBump)
 	}
 }
 
-double toDegrees(double angle)
-{
-	return (double)(angle * (180/M_PI));
-}
-
 
 
 int calculateMotorValue(int *frontLeft, int *frontRight, int *integralValue, int speed)
@@ -55,7 +50,7 @@ int calculateMotorValue(int *frontLeft, int *frontRight, int *integralValue, int
 	*integralValue +=proportionalValue;
 	if (*integralValue > 100 && *integralValue < -100)   //Limit the impact of integral value
 		*integralValue = 0;
-	float finalValue = proportionalValue * (speed/18) + differentialValue * 30 + *integralValue * 0.1;
+	float finalValue = proportionalValue * (speed/10) + differentialValue * 30 + *integralValue * 0.1;
 	int finalSpeed = speed + finalValue;
 
 	if(finalSpeed > MAXSPEED)		//filters high or low speeds
@@ -83,10 +78,8 @@ void wallFollower(int speed)
 	float x= 0, y = 0;
 	int total = 0;
 	set_ir_angle(1, -45);
-	set_origin();
 	while(1)
 	{
-		log_trail();
 		distanceTravelled(&previousAngle, &x, &y, &previousLeft, &previousRight);
 		finalSpeed = calculateMotorValue(&frontleft, &frontright, &total, speed);
 		stopped(&leftBumper, &rightBumper);
@@ -97,20 +90,13 @@ void wallFollower(int speed)
 			break;
 		}
 	}
-	float distance = sqrt(x*x + y*y);
-	double angle = toDegrees(atan(x/y));
-	printf("Distance = %f MM, angle = %f Degrees\n", distance, angle);
 }
 
 int main()
 {
 	connect_to_robot();
 	initialize_robot();
-	int i;
+	
 	wallFollower(50);
-	for(i = 0; i<1000; i++)
-	{
-		set_motors(-10,-10);
-	}
 	return 0;
 }
