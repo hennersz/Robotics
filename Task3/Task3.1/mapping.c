@@ -5,7 +5,7 @@
 #include <math.h>
 #include "picomms.h"
 
-#define WIDTH 260
+#define WIDTH 210
 #define WHEELDIAM 96
 
 float calculateRatio()
@@ -26,7 +26,11 @@ int findAngle(int leftEncoder, int rightEncoder, float ratio)
 double clicksToMM(int clicks)
 {
 	double wheelCirc = WHEELDIAM * M_PI;
+<<<<<<< HEAD
 	return wheelCirc/360.0;
+=======
+	return clicks*(wheelCirc/360.0);
+>>>>>>> FETCH_HEAD
 }
 
 double toRadians(double angle)
@@ -59,7 +63,7 @@ double angleChange(int deltaL, int deltaR)
 {
 	double dl = clicksToMM(deltaL);
 	double dr = clicksToMM(deltaR);
-	double angle = (dl-dr)/WIDTH;
+	double angle = (dl-dr)/WIDTH; printf("Angle: %f\n", angle);
 	return angle;
 }
 
@@ -72,8 +76,21 @@ void positionChange(double* previousAngle, int deltaL, int deltaR, int* x, int* 
 	double rR = dR/currentAngle;
 	double rM = (rL+rR)/2;
 
+<<<<<<< HEAD
 	*x += rM * cos(*previousAngle + currentAngle) - rM * cos(*previousAngle);
 	*y += rM * sin(*previousAngle + currentAngle) - rM * sin(*previousAngle);
+=======
+	if(*previousAngle == 0)
+	{
+		*x -= rM - rM * cos(currentAngle); printf("X += %f\n",rM - rM * cos(currentAngle));
+		*y += rM * sin(currentAngle); printf("Y += %f\n",rM * sin(currentAngle));
+	}
+	else
+	{
+		*x -= rM * cos(*previousAngle + currentAngle) - rM * cos(*previousAngle); printf("X += %f\n",rM * cos(*previousAngle + currentAngle) - rM * cos(*previousAngle));
+		*y += rM * sin(*previousAngle + currentAngle) - rM * sin(*previousAngle); printf("Y += %f\n",rM * sin(*previousAngle + currentAngle) - rM * sin(*previousAngle));
+	}
+>>>>>>> FETCH_HEAD
 	*previousAngle += currentAngle;
 }
 
@@ -90,4 +107,9 @@ void distanceTravelled(double* previousAngle, int* x, int* y)
 	{
 		positionChange(previousAngle, deltaL, deltaR, x, y);
 	}
+<<<<<<< HEAD
+=======
+	set_point(*x/10, *y/10);
+	printf("X:%.0f MM , Y: %.0f MM\n", *x, *y);
+>>>>>>> FETCH_HEAD
 }
