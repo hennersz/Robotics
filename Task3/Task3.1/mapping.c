@@ -5,10 +5,10 @@
 #include <math.h>
 #include "picomms.h"
 
-#define WIDTH 260
+#define WIDTH 220
 #define WHEELDIAM 96
 
-float ratio = 0.42;
+float ratio;
 
 void calculateRatio()
 {
@@ -17,7 +17,7 @@ void calculateRatio()
 	ratio = 1/(robotCirc/wheelCirc);
 }
 
-int findAngle(int leftEncoder, int rightEncoder, float ratio)
+int findAngle(int leftEncoder, int rightEncoder)
 {
 	float temp;
 	temp = (leftEncoder - rightEncoder)/2.0 * ratio;
@@ -46,11 +46,10 @@ void encoderChange(int* previousLeft, int* previousRight, int* deltaL, int* delt
 	
 }
 
-void straightDistance(int distance, float* x, float* y)
+void straightDistance(int distance, float* x, float* y,int previousLeft, int previousRight)
 {
-	int lEnc, rEnc;
-	get_motor_encoders(&lEnc, &rEnc);
-	double degrees = (double)findAngle(lEnc, rEnc, ratio);
+	
+	double degrees = (double)findAngle(previousLeft, previousRight  );
 	double radians = toRadians(degrees);
 	distance = clicksToMM(distance);
 	*y += (distance * (cos(radians)));
@@ -76,13 +75,13 @@ void positionChange(double* previousAngle, int deltaL, int deltaR, float* x, flo
 
 	if(*previousAngle == 0)
 	{
-		*x += rM - rM * cos(currentAngle); printf("X += %f\n",rM - rM * cos(currentAngle));
-		*y += rM * sin(currentAngle); printf("Y += %f\n",rM * sin(currentAngle));
+		*x -= rM - rM * cos(currentAngle);
+		*y += rM * sin(currentAngle); 
 	}
 	else
 	{
-		*x += rM * cos(*previousAngle + currentAngle) - rM * cos(*previousAngle); printf("X += %f\n",rM * cos(*previousAngle + currentAngle) - rM * cos(*previousAngle));
-		*y += rM * sin(*previousAngle + currentAngle) - rM * sin(*previousAngle); printf("Y += %f\n",rM * sin(*previousAngle + currentAngle) - rM * sin(*previousAngle));
+		*x -= rM * cos(*previousAngle + currentAngle) - rM * cos(*previousAngle);
+		*y += rM * sin(*previousAngle + currentAngle) - rM * sin(*previousAngle);
 	}
 	*previousAngle += currentAngle;
 }
@@ -93,11 +92,12 @@ void distanceTravelled(double* previousAngle, float* x, float* y, int* previousL
 	encoderChange(previousLeft, previousRight, &deltaL, &deltaR);
 	if(deltaL == deltaR)
 	{
-		straightDistance(deltaL, x, y);
+		straightDistance((deltaL+deltaR)/2, x, y, *previousLeft, *previousRight);
 	}
 	else
 	{
 		positionChange(previousAngle, deltaL, deltaR, x, y);
 	}
+	set_point(*x/10, *y/10);
 	printf("X:%.0f MM , Y: %.0f MM\n", *x, *y);
 }
