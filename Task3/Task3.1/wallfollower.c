@@ -62,6 +62,11 @@ int calculateMotorValue(int *frontLeft, int *frontRight, int *integralValue, int
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+	//int finalSpeed = speed + finalValue;
+
+>>>>>>> parent of 8eaf83f... Done
 =======
 	//int finalSpeed = speed + finalValue;
 
