@@ -43,6 +43,8 @@ void stopped(int *lBump, int *rBump)
 	}
 }
 
+
+
 int calculateMotorValue(int *frontLeft, int *frontRight, int *integralValue, int speed)
 {																					
 	int differentialValue = differential(frontLeft, frontRight);
@@ -50,19 +52,25 @@ int calculateMotorValue(int *frontLeft, int *frontRight, int *integralValue, int
 	*integralValue +=proportionalValue;
 	if (*integralValue > 100 && *integralValue < -100)   //Limit the impact of integral value
 		*integralValue = 0;
-	float finalValue = proportionalValue * (speed/10) + differentialValue * 30 + *integralValue * 0.1;  //robot /20
+	float finalValue = proportionalValue * (speed/20) + differentialValue * 30 + *integralValue * 0.1;
+	finalValue*=0.5;
 
 	if(finalValue > MAXSPEED)		//filters high or low speeds
 		finalValue = MAXSPEED;
 	else if(finalValue < -MAXSPEED)
 		finalValue = - MAXSPEED;
+
 	return finalValue;
 }
 
 void checkWalls(int frontLeft, int frontRight, int speed, int finalValue)
 {
+	printf("finalValue = %i\n", finalValue);
+
 	if(frontRight < 30)
 		set_motors(frontRight, frontRight);
+	else if(finalValue < -2)
+		set_motors(speed - finalValue, speed);
 	else
 		set_motors(speed, finalValue + speed);
 }

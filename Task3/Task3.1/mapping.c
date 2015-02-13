@@ -99,8 +99,5 @@ void distanceTravelled(double* previousAngle, float* x, float* y, int* previousL
 		positionChange(previousAngle, deltaL, deltaR, x, y);
 	}
 	set_point(*x/10, *y/10);
-	double distance = sqrt((*x)*(*x) + (*y)*(*y));
-	double angle = atan((*x)/(*y));
-	angle *= (180/M_PI);
-	printf("Distance = %f\tangle = %f\n", distance, angle);
+	printf("X:%.0f MM , Y: %.0f MM\n", *x, *y);
 }

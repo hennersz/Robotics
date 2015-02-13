@@ -12,6 +12,6 @@ int main()
 	connect_to_robot();
 	initialize_robot();
 	set_origin();
-	wallFollower(60);
+	wallFollower(30);
 	return 0;
 }
