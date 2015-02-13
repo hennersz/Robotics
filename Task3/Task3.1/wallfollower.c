@@ -7,7 +7,7 @@
 #include "mapping.h"
 
 #define TARGETDISTANCE 36
-#define MAXSPEED 72
+#define MAXSPEED 127
 #define STOPPINGDISTANCE 13
 float ratio;
 
@@ -53,7 +53,7 @@ int calculateMotorValue(int *frontLeft, int *frontRight, int *integralValue, int
 	if (*integralValue > 100 && *integralValue < -100)   //Limit the impact of integral value
 		*integralValue = 0;
 	float finalValue = proportionalValue * (speed/20) + differentialValue * 30 + *integralValue * 0.1;
-	finalValue*=0.5;    //0.5 robot
+	finalValue*=0.5;
 
 	if(finalValue > MAXSPEED)		//filters high or low speeds
 		finalValue = MAXSPEED;
@@ -66,14 +66,13 @@ int calculateMotorValue(int *frontLeft, int *frontRight, int *integralValue, int
 void checkWalls(int frontLeft, int frontRight, int speed, int finalValue)
 {
 	printf("finalValue = %i\n", finalValue);
+
 	if(frontRight < 30)
 		set_motors(frontRight, frontRight);
-
-	else if(finalValue > 4)    //2 
-		set_motors(speed, finalValue + speed);
-		
+	else if(finalValue < -2)
+		set_motors(speed - finalValue, speed);
 	else
-		set_motors(finalValue, speed + finalValue);
+		set_motors(speed, finalValue + speed);
 }
 
 void wallFollower(int speed)
