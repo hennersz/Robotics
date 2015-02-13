@@ -60,8 +60,6 @@ int calculateMotorValue(int *frontLeft, int *frontRight, int *integralValue, int
 	else if(finalValue < -MAXSPEED)
 		finalValue = - MAXSPEED;
 
-	//int finalSpeed = speed + finalValue;
-
 	return finalValue;
 }
 
