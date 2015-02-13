@@ -7,7 +7,6 @@
 #include "mapping.h"
 #include "wallfollower.h"
 
-
 int main()
 {
 	connect_to_robot();
