@@ -14,7 +14,7 @@ int main()
     connect_to_robot();
 	initialize_robot();
 
-    straight(50, 1);
+    //straight(50, 1);
     turn('R', 135, 127);
     straight(50, 0.707);
     turn('R', 90, 127);

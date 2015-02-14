@@ -71,20 +71,18 @@ void checkWalls(int frontLeft, int frontRight, int speed, int finalValue)
 		set_motors(speed, finalValue + speed);
 }
 
-void wallFollower(int speed, List* list)
+void wallFollower(int speed, List* list, Mapping* mapping)
 {
 	int frontleft, frontright, finalValue;
 	int leftBumper,rightBumper;
-	int previousLeft = 0, previousRight = 0;
-	double previousAngle = 0;
-	float x= 0, y = 0;
 	int total = 0;
+
 	set_ir_angle(1, -45);
 	calculateRatio();
 	int clock  = 0;
 	while(1)
 	{
-		distanceTravelled(&previousAngle, &x, &y, &previousLeft, &previousRight);
+		distanceTravelled(mapping);
 		finalValue = calculateMotorValue(&frontleft, &frontright, &total, speed);
 		stopped(&leftBumper, &rightBumper);
 		checkWalls(frontleft, frontright, speed, finalValue);
@@ -94,10 +92,10 @@ void wallFollower(int speed, List* list)
 			set_motors(0, 0);
 			break;
 		}
-		clock = (clock+1)%20;
+		clock = (clock+1)%30;
 		if(clock == 1)
 		{
-			pushNode(list, x, y);
+			pushNode(list, mapping->x, mapping->y);
 		}
 	}
 }

@@ -5,11 +5,21 @@
 #include <math.h>
 #include "picomms.h"
 #include "linkedList.h"
+#include "mapping.h"
 
 #define WIDTH 220
 #define WHEELDIAM 96
 
 float ratio;
+
+void initialiseMapping(Mapping *mapping)
+{
+	mapping->previousAngle = 0;
+	mapping->previousLeft = 0;
+	mapping->previousRight = 0;
+	mapping->x = 0;
+	mapping->y = 0;
+}
 
 void calculateRatio()
 {
@@ -47,14 +57,14 @@ void encoderChange(int* previousLeft, int* previousRight, int* deltaL, int* delt
 	
 }
 
-void straightDistance(int distance, float* x, float* y,int previousLeft, int previousRight)
+void straightDistance(int distance, Mapping *m)
 {
 	
-	double degrees = (double)findAngle(previousLeft, previousRight  );
+	double degrees = (double)findAngle(m->previousLeft, m->previousRight);
 	double radians = toRadians(degrees);
 	distance = clicksToMM(distance);
-	*y += (distance * (cos(radians)));
-	*x += (distance * (sin(radians))); 
+	m->y += (distance * (cos(radians)));
+	m->x += (distance * (sin(radians))); 
 }
 
 double angleChange(int deltaL, int deltaR)
@@ -65,7 +75,7 @@ double angleChange(int deltaL, int deltaR)
 	return angle;
 }
 
-void positionChange(double* previousAngle, int deltaL, int deltaR, float* x, float* y)
+void positionChange(Mapping *m, int deltaL, int deltaR)
 {
 	double currentAngle = angleChange(deltaL, deltaR); 
 	double dL = clicksToMM(deltaL);
@@ -74,34 +84,34 @@ void positionChange(double* previousAngle, int deltaL, int deltaR, float* x, flo
 	double rR = dR/currentAngle;
 	double rM = (rL+rR)/2.0;
 
-	if(*previousAngle == 0)
+	if(m->previousAngle == 0)
 	{
-		*x -= rM - rM * cos(currentAngle);
-		*y += rM * sin(currentAngle); 
+		m->x -= rM - rM * cos(currentAngle);
+		m->y += rM * sin(currentAngle); 
 	}
 	else
 	{
-		*x -= rM * cos(*previousAngle + currentAngle) - rM * cos(*previousAngle);
-		*y += rM * sin(*previousAngle + currentAngle) - rM * sin(*previousAngle);
+		m->x -= rM * cos(m->previousAngle + currentAngle) - rM * cos(m->previousAngle);
+		m->y += rM * sin(m->previousAngle + currentAngle) - rM * sin(m->previousAngle);
 	}
-	*previousAngle += currentAngle;
+	m->previousAngle += currentAngle;
 }
 
-void distanceTravelled(double* previousAngle, float* x, float* y, int* previousLeft, int* previousRight)
+void distanceTravelled(Mapping *mapping)
 {
 	int deltaL, deltaR;
-	encoderChange(previousLeft, previousRight, &deltaL, &deltaR);
+	encoderChange(&mapping->previousLeft, &mapping->previousRight, &deltaL, &deltaR);
 	if(deltaL == deltaR)
 	{
-		straightDistance((deltaL+deltaR)/2, x, y, *previousLeft, *previousRight);
+		straightDistance((deltaL+deltaR)/2, mapping); //fix this
 	}
 	else
 	{
-		positionChange(previousAngle, deltaL, deltaR, x, y);
+		positionChange(mapping, deltaL, deltaR);
 	}
-	set_point(*x/10, *y/10);
-	double distance = sqrt((*x)*(*x) + (*y)*(*y));
-	double angle = atan((*x)/(*y));
-	angle *= (180/M_PI);
-	printf("Distance = %f\tangle = %f\n", distance, angle);
+	set_point((mapping->x)/10, (mapping->y/10));
+	//double distance = sqrt((mapping->x)*(mapping->x) + (mapping->y)*(mapping->y));
+	//double angle = atan((mapping->x)/(mapping->y));
+	//angle *= (180/M_PI);
+	//printf("Distance = %f\tangle = %f\n", distance, angle);
 }

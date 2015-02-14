@@ -1,19 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-
-typedef struct Node
-{
-	struct Node* parent;
-	struct Node* child;
-	int x;
-	int y;
-}Node;
-
-typedef struct List
-{
-	Node* first;
-	Node* last;
-}List;
+#include "linkedList.h"
 
 void initialiseList(List* list)
 {
@@ -29,7 +16,7 @@ void initialiseList(List* list)
 	list->last->child = NULL;
 }
 
-void pushNode(List *list, int x, int y)
+void pushNode(List *list, float x, float y)
 {
 	Node* newNode = malloc(sizeof(Node));
 
@@ -46,7 +33,7 @@ void traverseList(List* list)
 	Node* currentNode = list->last;
 	while(currentNode!=NULL)
 	{
-		printf("X=%i, Y=%i\n",currentNode->x, currentNode->y);
+		printf("X=%f, Y=%f\n",currentNode->x, currentNode->y);
 		currentNode=currentNode->parent;
 	}
 }
