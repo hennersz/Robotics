@@ -92,9 +92,11 @@ void wallFollower(int speed, List* list, Mapping* mapping)
 			set_motors(0, 0);
 			break;
 		}
-		clock = (clock+1)%30;
+		clock = (clock+1)%10;
 		if(clock == 1)
 		{
+			set_point(mapping->x/10, mapping->y/10);
+			printf("Added : %f\t%f\n", mapping->x/10, mapping->y/10);
 			pushNode(list, mapping->x, mapping->y);
 		}
 	}

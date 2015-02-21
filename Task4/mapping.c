@@ -7,7 +7,7 @@
 #include "linkedList.h"
 #include "mapping.h"
 
-#define WIDTH 220
+#define WIDTH 225
 #define WHEELDIAM 96
 
 float ratio;
@@ -61,6 +61,7 @@ void straightDistance(int distance, Mapping *m)
 {
 	
 	double degrees = (double)findAngle(m->previousLeft, m->previousRight);
+	//printf("degrees = %f\n", degrees);
 	double radians = toRadians(degrees);
 	distance = clicksToMM(distance);
 	m->y += (distance * (cos(radians)));
@@ -103,13 +104,13 @@ void distanceTravelled(Mapping *mapping)
 	encoderChange(&mapping->previousLeft, &mapping->previousRight, &deltaL, &deltaR);
 	if(deltaL == deltaR)
 	{
-		straightDistance((deltaL+deltaR)/2, mapping); //fix this
+		straightDistance((deltaL+deltaR)/2, mapping);
 	}
 	else
 	{
 		positionChange(mapping, deltaL, deltaR);
 	}
-	set_point((mapping->x)/10, (mapping->y/10));
+	//set_point((mapping->x)/10, (mapping->y/10));
 	//double distance = sqrt((mapping->x)*(mapping->x) + (mapping->y)*(mapping->y));
 	//double angle = atan((mapping->x)/(mapping->y));
 	//angle *= (180/M_PI);

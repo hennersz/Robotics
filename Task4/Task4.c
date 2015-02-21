@@ -9,44 +9,99 @@
 #include "wallfollower.h"
 #include "basicFunctions.h"
 
-void goTo(Node *node, Mapping *mapping, int speed)
+#define LIMIT 70
+
+float findTargetAngle(Mapping *mapping, Node *node, float deltaX, float deltaY)
 {
-	float deltaX, deltaY, angle;
-	float distance;
-	int speedDifference, positionAngle;
-	do{
+	float angle = atan(deltaX/deltaY) * (180/M_PI);  //The angle between the 2 points in degrees
+	int angleRobot = abs(findAngle(mapping->previousLeft, mapping->previousRight));
+
+	if((node->x < mapping->x) && (node->y > mapping->y)) //2st quadrant	
+		angle = angle + angleRobot;
+	else if((node->x < mapping->x) && (node->y < mapping->y)) //3rd quadrant
+		angle = angleRobot + angle - 90;
+	else if((node->x > mapping->x) && (node->y < mapping->y))  //4th quadrant
+		angle = angleRobot + angle - 180;
+
+	return angle;
+	//return atan2(node->x, node->y) - atan2(mapping->x, mapping->y);
+}
+
+ 
+void goTo2(Node *node, Mapping *mapping, int speed)
+{
+	float deltaX = node->x - mapping->x;
+	float deltaY = node->y - mapping->y;
+	float targetDist = sqrt(deltaX*deltaX + deltaY*deltaY);
+	float distance1, previousX, previousY, angle;
+	float previousAngle;
+	float distance = 0;
+	int speedDifference, proportional, differential, integral;
+
+	while(distance < targetDist)
+	{
+		previousX = mapping->x;
+		previousY = mapping->y;
+		previousAngle = angle;
 		distanceTravelled(mapping);
+		set_point(mapping->x/10, mapping->y/10);
+		deltaX = mapping->x - previousX;   //distance between current point and previous point
+		deltaY = mapping->y - previousY;
+		distance += sqrt(deltaX*deltaX + deltaY*deltaY); //sees how far it has travelled
+
 		deltaX = node->x - mapping->x;  //distance between target and current point
 		deltaY = node->y - mapping->y;
-		distance = sqrt(deltaX*deltaX + deltaY*deltaY);
-		printf("X=%f\tY=%f\tdeltaX=%f\tdeltaY=%f\n",mapping->x, mapping->y, deltaX, deltaY);
-		angle = atan(deltaX/deltaY) * (180/M_PI);  //convert to degrees 
-		positionAngle = findAngle(mapping->previousLeft, mapping->previousRight);
-		printf("Angle=%f\n", angle);
-		if(positionAngle > 90 || positionAngle < -90)
-		{
-			speedDifference = -(speed/10) * angle;  //implement PID??
-		}
+		distance1 = sqrt(deltaX*deltaX + deltaY*deltaY);
+		angle = findTargetAngle(mapping, node, deltaX, deltaY); //The angle between the 2 points in degrees
+		proportional = angle;// * distance1;
+		differential = angle - previousAngle;
+		integral += proportional;
+		if (integral > 100 && integral < -100)   //Limit the impact of integral value
+			integral = 0;
+
+		speedDifference = proportional * ((float)speed / 75.0) + 20 * differential;// + 0.01 * integral; //1800
+		
+		if (speedDifference > LIMIT)
+			speedDifference = LIMIT;
+		else if(speedDifference < -LIMIT)	
+			speedDifference = -LIMIT;
+
+		//printf("deltaX=%f\tdeltaY=%f\tspeedDifference = %i\tdistance = %f\tangle =%f\n",deltaX, deltaY, speedDifference, distance, angle);
+
+		if(speedDifference > 0)
+			set_motors(speed + speedDifference, speed);
 		else
-			speedDifference = angle;
-		set_motors(speed, speed + speedDifference);
+			set_motors(speed, speed - speedDifference);
 	}
-	while(!(distance < 20));
-	printf("QUIT deltaX=%f\n", deltaX);
 }
+
 
 void goBack(List *list, Mapping *mapping, int speed)
 {
 	Node* currentNode = list->last;
+	distanceTravelled(mapping);
 	while(currentNode!=NULL)
 	{
 		float deltaX = currentNode->x - mapping->x;
 		float deltaY = currentNode->y - mapping->y;
 		printf("Current Position: X=%f\tY=%f\tangle=%i\n", mapping->x, mapping->y, findAngle(mapping->previousLeft, mapping->previousRight));
 		printf("Target Position: X=%f\tY=%f\tangle=%f\n",currentNode->x, currentNode->y, atan(deltaX/deltaY));
-		goTo(currentNode, mapping, speed);
+		if(sqrt(deltaX * deltaX + deltaY * deltaY) > 10)
+			goTo2(currentNode, mapping, speed);
 		currentNode=currentNode->parent;
 	}
+}
+
+void plotPoints(List *list)
+{
+	Node* currentNode = list->last;
+	while(currentNode!=NULL)
+	{
+		set_point(currentNode->x/10, currentNode->y/10);
+		printf("PLOTTED POINTS: %f\t%f\n", currentNode->x/10,currentNode->y/10);
+		currentNode=currentNode->parent;
+	}
+
 }
 
 
@@ -63,8 +118,9 @@ int main()
 
 	wallFollower(70, list, mapping);
 	turn('L', 180, 127);
+	//plotPoints(list);
 
-	goBack(list, mapping, 50);
+	goBack(list, mapping, 30);
 
 	return 0;
 }
