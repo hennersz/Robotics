@@ -7,7 +7,7 @@
 #include "mapping.h"
 #include "linkedList.h"
 
-#define TARGETDISTANCE 36
+#define TARGETDISTANCE 20
 #define MAXSPEED 127
 #define STOPPINGDISTANCE 13
 float ratio;
@@ -79,7 +79,6 @@ void wallFollower(int speed, List* list, Mapping* mapping)
 
 	set_ir_angle(1, -45);
 	calculateRatio();
-	int clock  = 0;
 	while(1)
 	{
 		distanceTravelled(mapping);
@@ -92,12 +91,8 @@ void wallFollower(int speed, List* list, Mapping* mapping)
 			set_motors(0, 0);
 			break;
 		}
-		clock = (clock+1)%10;
-		if(clock == 1)
-		{
-			set_point(mapping->x/10, mapping->y/10);
-			printf("Added : %f\t%f\n", mapping->x/10, mapping->y/10);
-			pushNode(list, mapping->x, mapping->y);
-		}
+		set_point(mapping->x/10, mapping->y/10);
+		printf("Added : %f\t%f\n", mapping->x/10, mapping->y/10);
+		pushNode(list, mapping->x, mapping->y);
 	}
 }

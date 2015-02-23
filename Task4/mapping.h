@@ -8,7 +8,7 @@ typedef struct Mapping
 }Mapping;
 
 float ratio;
-int findAngle(int leftEncoder, int rightEncoder);
+//int findAngle(int leftEncoder, int rightEncoder);
 void distanceTravelled(Mapping *mapping);
 void initialiseMapping(Mapping *mapping);
 void calculateRatio();

@@ -10,7 +10,10 @@
 #include "basicFunctions.h"
 
 #define LIMIT 70
+#define MINIMUM_DISTANCE 15
 
+
+/*
 float findTargetAngle(Mapping *mapping, Node *node, float deltaX, float deltaY)
 {
 	float angle = atan(deltaX/deltaY) * (180/M_PI);  //The angle between the 2 points in degrees
@@ -26,8 +29,94 @@ float findTargetAngle(Mapping *mapping, Node *node, float deltaX, float deltaY)
 	return angle;
 	//return atan2(node->x, node->y) - atan2(mapping->x, mapping->y);
 }
+*/
 
- 
+double toDegrees(double angle)
+{
+	printf("offset = %f\n", angle*(180.0/M_PI));
+	return angle*(180.0/M_PI);
+}
+
+double findTargetAngle(Mapping *mapping, Node *node)
+{
+	double xDifference = node->x - mapping->x;
+	double yDifference = node->y - mapping->y;
+	double targetAngle = atan(xDifference/yDifference);
+	if(node->y < mapping-> y)
+	{
+		targetAngle += M_PI;
+	}
+	else if(node->x < mapping -> x)
+	{
+		targetAngle += 2*M_PI;
+	}
+	return targetAngle;
+}
+
+int tooClose(Node *node, Mapping *mapping)
+{
+	double xDifference = node->x - mapping->x;
+	double yDifference = node->y - mapping->y;
+	double distance = sqrt(xDifference*xDifference + yDifference*yDifference);
+
+	if(distance<MINIMUM_DISTANCE)
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+int calculateSpeedOffset(Mapping *mapping, Node *node)
+{
+	double targetAngle = findTargetAngle(mapping, node);
+	printf("Target angle:%f\n", targetAngle);
+	double robotAngle = mapping->previousAngle;
+	if(robotAngle > 2*M_PI)
+	{
+		robotAngle -= 2*M_PI;
+	}
+	else if (robotAngle <=0)
+	{
+		robotAngle +=2*M_PI;
+	}
+	printf("Robot angle:%f\n", robotAngle);
+	int speedOffset = (int)toDegrees(robotAngle - targetAngle);
+	printf("SpeedOffset:%d\n", speedOffset);
+
+	return speedOffset;
+}
+
+void goTo3(Mapping *mapping, Node *node, int speed)
+{
+	distanceTravelled(mapping);
+	double speedOffset = (double)calculateSpeedOffset(mapping, node)*1.5;
+	set_motors(speed, speed + (int)speedOffset);
+}
+
+void goBack2(List *list, Mapping *mapping, int speed)
+{
+	Node* currentNode = list->last;
+	distanceTravelled(mapping);
+	while(currentNode!=NULL)
+	{
+		if(tooClose(currentNode, mapping))
+		{
+			currentNode = currentNode->parent;
+		}
+		else
+		{
+			printf("robot position x:%f\ty:%f\n",mapping->x, mapping->y);
+			printf("target node x:%f\ty:%f\n", currentNode->x, currentNode->y);
+			goTo3(mapping, currentNode, speed);
+		}
+	}
+
+	set_motors(0,0);
+}
+/* 
 void goTo2(Node *node, Mapping *mapping, int speed)
 {
 	float deltaX = node->x - mapping->x;
@@ -91,7 +180,7 @@ void goBack(List *list, Mapping *mapping, int speed)
 		currentNode=currentNode->parent;
 	}
 }
-
+*/
 void plotPoints(List *list)
 {
 	Node* currentNode = list->last;
@@ -118,9 +207,10 @@ int main()
 
 	wallFollower(70, list, mapping);
 	turn('L', 180, 127);
+	
 	//plotPoints(list);
 
-	goBack(list, mapping, 30);
+	goBack2(list, mapping, 25);
 
 	return 0;
 }

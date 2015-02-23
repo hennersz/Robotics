@@ -27,14 +27,14 @@ void calculateRatio()
 	float robotCirc = WIDTH * M_PI;
 	ratio = 1/(robotCirc/wheelCirc);
 }
-
-int findAngle(int leftEncoder, int rightEncoder)
+/*
+double findAngle(Mapping mapping)
 {
-	float temp;
-	temp = (leftEncoder - rightEncoder)/2.0 * ratio;
-	return (int)temp % 360;
+	double angle;
+	angle = (mapping->previousLeft - mapping->previousRight)/2.0 * ratio;
+	return angle;
 }
-
+*/
 double clicksToMM(int clicks)
 {
 	double wheelCirc = WHEELDIAM * M_PI;
@@ -60,12 +60,11 @@ void encoderChange(int* previousLeft, int* previousRight, int* deltaL, int* delt
 void straightDistance(int distance, Mapping *m)
 {
 	
-	double degrees = (double)findAngle(m->previousLeft, m->previousRight);
+	double angle = m->previousAngle;
 	//printf("degrees = %f\n", degrees);
-	double radians = toRadians(degrees);
 	distance = clicksToMM(distance);
-	m->y += (distance * (cos(radians)));
-	m->x += (distance * (sin(radians))); 
+	m->y += (distance * (cos(angle)));
+	m->x += (distance * (sin(angle))); 
 }
 
 double angleChange(int deltaL, int deltaR)
