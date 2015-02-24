@@ -1,3 +1,3 @@
 
-void turn (char direction, float angle, float speed);
-void straight(int targetSpeed, float distance);
+void turn (char direction, double angle, double speed);
+void straight(int targetSpeed, double distance);

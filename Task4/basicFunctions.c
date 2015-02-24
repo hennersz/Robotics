@@ -7,7 +7,7 @@
 #include <stdbool.h>
 #include "picomms.h"
 
-float stoppingPoint (float speed)    //determines when to switch from actual speed to percentage speed
+double stoppingPoint (double speed)    //determines when to switch from actual speed to percentage speed
 {
     if (speed < 21)
         return 0.1;
@@ -35,12 +35,12 @@ void wheelSigns(char direction, int* leftSign, int* rightSign)
     }
 }
 
-void turningProcess(int initialLeft, int initialRight, float target, char direction, float speed)
+void turningProcess(int initialLeft, int initialRight, double target, char direction, double speed)
 {
     
     int *leftcount = malloc(sizeof(int)), *rightcount = malloc(sizeof(int)), *leftSign = malloc(sizeof(int)), *rightSign = malloc(sizeof(int));
     int previousLeftCount = 0, previousRightCount = 0,differenceRight = 0,differenceLeft = 0;
-    float percentageLeft, percentageRight, speedLeft, speedRight, stop = stoppingPoint(speed);
+    double percentageLeft, percentageRight, speedLeft, speedRight, stop = stoppingPoint(speed);
     bool corrected = false;
     wheelSigns(direction, leftSign, rightSign);
     while (1)
@@ -97,15 +97,15 @@ void turningProcess(int initialLeft, int initialRight, float target, char direct
     free(leftcount); free(rightcount); free(leftSign); free(rightSign);
 }
 
-void turn (char direction, float angle, float speed)
+void turn (char direction, double angle, double speed)
 {
     int *left = malloc(sizeof(int));
     int *right = malloc(sizeof(int));
     get_motor_encoders(left, right);
     int initialLeft = *left;
     int initialRight = *right;
-    float ratio = 2.365;                            //represents a 1 degree turn in terms of the encoder
-    float encoder = ratio*angle;
+    double ratio = 2.365;                            //represents a 1 degree turn in terms of the encoder
+    double encoder = ratio*angle;
     if (direction == 'L')
         turningProcess(initialLeft, initialRight, encoder,direction, speed);
     else if (direction == 'R')
@@ -122,9 +122,9 @@ int calculateAcceleration(int startSpeed, int endSpeed, int distance)
     return acceleration;
 }
 
-int metersToTicks(float distance)//takes distance in meters
+int metersToTicks(double distance)//takes distance in meters
 {
-    float ticks = 1194*distance; //1194 is the ratio from ticks to meters
+    double ticks = 1194*distance; //1194 is the ratio from ticks to meters
     return (int)ticks;
 }
 void getDifference(int* left, int initialLeft, int* differenceLeft,int* right, int initialRight, int* differenceRight, int *previousLeft, int*previousRight)
@@ -137,7 +137,7 @@ void getDifference(int* left, int initialLeft, int* differenceLeft,int* right, i
 }
 
 //takes the speed and the distance you want to travel in meters
-void straight(int targetSpeed, float distance)
+void straight(int targetSpeed, double distance)
 {
     
     //intialse the pointers needed to get motor encoder values and measure how far it has turned
@@ -147,7 +147,7 @@ void straight(int targetSpeed, float distance)
     int minimumSpeed = 6; // the fastest the wheels can turn without skipping encoder values
     
     int target = metersToTicks(distance);
-    int stopBegin = 0.3 * target, stopEnd = 0.6 * target; float speed;
+    int stopBegin = 0.3 * target, stopEnd = 0.6 * target; double speed;
     get_motor_encoders(left, right);
     int initialLeft = *left;
     int initialRight = *right;
@@ -162,13 +162,13 @@ void straight(int targetSpeed, float distance)
         
         if(distanceTravelled < stopBegin)
         {
-            speed = ((float)(*differenceLeft + (*left - *previousLeft))/stopBegin) * targetSpeed + 1;
+            speed = ((double)(*differenceLeft + (*left - *previousLeft))/stopBegin) * targetSpeed + 1;
             if (speed > targetSpeed)
                 speed = targetSpeed;
         }
         else if(distanceTravelled > stopEnd)
         {
-            speed = ((float)(target - (*differenceLeft + (*left - *previousLeft)))/target) * targetSpeed + 1;
+            speed = ((double)(target - (*differenceLeft + (*left - *previousLeft)))/target) * targetSpeed + 1;
             if (speed > targetSpeed)
                 speed = targetSpeed;
             else if(speed < minimumSpeed)

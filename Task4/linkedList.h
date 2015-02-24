@@ -2,8 +2,8 @@ typedef struct Node
 {
 	struct Node* parent;
 	struct Node* child;
-	float x;
-	float y;
+	double x;
+	double y;
 }Node;
 
 typedef struct List
@@ -13,5 +13,5 @@ typedef struct List
 }List;
 
 void initialiseList(List* list);
-void pushNode(List *list, float x, float y);
+void pushNode(List *list, double x, double y);
 void traverseList(List* list);

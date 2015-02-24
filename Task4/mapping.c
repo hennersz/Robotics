@@ -10,7 +10,7 @@
 #define WIDTH 225
 #define WHEELDIAM 96
 
-float ratio;
+double ratio;
 
 void initialiseMapping(Mapping *mapping)
 {
@@ -23,8 +23,8 @@ void initialiseMapping(Mapping *mapping)
 
 void calculateRatio()
 {
-	float wheelCirc = WHEELDIAM * M_PI;
-	float robotCirc = WIDTH * M_PI;
+	double wheelCirc = WHEELDIAM * M_PI;
+	double robotCirc = WIDTH * M_PI;
 	ratio = 1/(robotCirc/wheelCirc);
 }
 /*

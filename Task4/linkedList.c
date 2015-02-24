@@ -16,7 +16,7 @@ void initialiseList(List* list)
 	list->last->child = NULL;
 }
 
-void pushNode(List *list, float x, float y)
+void pushNode(List *list, double x, double y)
 {
 	Node* newNode = malloc(sizeof(Node));
 

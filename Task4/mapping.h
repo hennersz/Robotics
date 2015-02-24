@@ -1,13 +1,13 @@
 typedef struct Mapping 
 {
 	double previousAngle;
-	float x;
-	float y;
+	double x;
+	double y;
 	int previousLeft;
 	int previousRight;
 }Mapping;
 
-float ratio;
+double ratio;
 //int findAngle(int leftEncoder, int rightEncoder);
 void distanceTravelled(Mapping *mapping);
 void initialiseMapping(Mapping *mapping);

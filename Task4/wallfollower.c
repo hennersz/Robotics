@@ -7,17 +7,24 @@
 #include "mapping.h"
 #include "linkedList.h"
 
-#define TARGETDISTANCE 20
+#define TARGETDISTANCE1 20
+#define TARGETDISTANCE2 25
 #define MAXSPEED 127
 #define STOPPINGDISTANCE 13
-float ratio;
+double ratio;
 
 int proportional(int *frontLeft)//calculate proportional value of how far the robot is from the wall
 {
+	int sideLeft, sideRight;
+
+	get_side_ir_dists(&sideLeft, &sideRight);
+
 	if(*frontLeft > 50)
 		return 5;
+	else if(sideRight < 7)
+		return *frontLeft - TARGETDISTANCE1;
 	else
-		return *frontLeft - TARGETDISTANCE;
+		return *frontLeft - TARGETDISTANCE2;
 }
 
 int differential(int *frontLeft, int *frontRight) //Rate of change of distance from the wall between 2 readings
@@ -53,7 +60,7 @@ int calculateMotorValue(int *frontLeft, int *frontRight, int *integralValue, int
 	*integralValue +=proportionalValue;
 	if (*integralValue > 100 && *integralValue < -100)   //Limit the impact of integral value
 		*integralValue = 0;
-	float finalValue = proportionalValue * (speed/10) + differentialValue * 30 + *integralValue * 0.1;
+	double finalValue = proportionalValue * (speed/10) + differentialValue * 30 + *integralValue * 0.1;
 
 	if(finalValue > MAXSPEED)		//filters high or low speeds
 		finalValue = MAXSPEED;
@@ -91,7 +98,7 @@ void wallFollower(int speed, List* list, Mapping* mapping)
 			set_motors(0, 0);
 			break;
 		}
-		set_point(mapping->x/10, mapping->y/10);
+		//set_point(mapping->x/10, mapping->y/10);
 		printf("Added : %f\t%f\n", mapping->x/10, mapping->y/10);
 		pushNode(list, mapping->x, mapping->y);
 	}
