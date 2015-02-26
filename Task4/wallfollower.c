@@ -7,34 +7,26 @@
 #include "mapping.h"
 #include "linkedList.h"
 
-#define TARGETDISTANCE1 20
-#define TARGETDISTANCE2 25
+#define TARGETDISTANCE 20
 #define MAXSPEED 127
 #define STOPPINGDISTANCE 13
-double ratio;
 
-int proportional(int *frontLeft)//calculate proportional value of how far the robot is from the wall
+int proportional(int *front)//calculate proportional value of how far the robot is from the wall
 {
-	int sideLeft, sideRight;
-
-	get_side_ir_dists(&sideLeft, &sideRight);
-
-	if(*frontLeft > 50)
+	if(*front > 50)
 		return 5;
-	else if(sideRight < 7)
-		return *frontLeft - TARGETDISTANCE1;
 	else
-		return *frontLeft - TARGETDISTANCE2;
+		return *front - TARGETDISTANCE;
 }
 
-int differential(int *frontLeft, int *frontRight) //Rate of change of distance from the wall between 2 readings
-{
-	int previousFrontLeft = *frontLeft;
-	get_front_ir_dists(frontLeft, frontRight);
-	if(*frontLeft > 50)
+int differential(int *front,int* previousFront) //Rate of change of distance from the wall between 2 readings
+{	
+	if(*front > 50)
 		return 0;
-	else
-		return *frontLeft - previousFrontLeft;
+	int value = *front - *previousFront;
+	*previousFront = *front;
+	return value;
+
 }
 
 void stopped(int *lBump, int *rBump)
@@ -53,14 +45,14 @@ void stopped(int *lBump, int *rBump)
 
 
 
-int calculateMotorValue(int *frontLeft, int *frontRight, int *integralValue, int speed)
-{																					
-	int differentialValue = differential(frontLeft, frontRight);
-	int proportionalValue = proportional(frontLeft);
+int calculateMotorValue(int *front,int *previousFront, int *integralValue, int speed)
+{																	
+	int differentialValue = differential(front, previousFront);
+	int proportionalValue = proportional(front);
 	*integralValue +=proportionalValue;
 	if (*integralValue > 100 && *integralValue < -100)   //Limit the impact of integral value
 		*integralValue = 0;
-	double finalValue = proportionalValue * (speed/10) + differentialValue * 30 + *integralValue * 0.1;
+	double finalValue = proportionalValue * (speed/10) + differentialValue * 15 + *integralValue * 0.1;
 
 	if(finalValue > MAXSPEED)		//filters high or low speeds
 		finalValue = MAXSPEED;
@@ -70,35 +62,68 @@ int calculateMotorValue(int *frontLeft, int *frontRight, int *integralValue, int
 	return finalValue;
 }
 
-void checkWalls(int frontLeft, int frontRight, int speed, int finalValue)
+void checkWalls(int forwardSensor, int speed, int finalValue, bool leftCloser)
 {
-	if(frontRight < 30)
-		set_motors(frontRight, frontRight);
-	else
+	if(forwardSensor < 30)
+		set_motors(forwardSensor, forwardSensor);
+	else if (finalValue > 0 && leftCloser)
 		set_motors(speed, finalValue + speed);
+	else if(leftCloser)
+		set_motors(speed - finalValue, speed);
+	else if(finalValue > 0)
+		set_motors(speed + finalValue, speed);
+	else
+		set_motors(speed, speed - finalValue);
 }
 
 void wallFollower(int speed, List* list, Mapping* mapping)
 {
-	int frontleft, frontright, finalValue;
+	int frontLeft, frontRight, finalValue, previousFront;
 	int leftBumper,rightBumper;
 	int total = 0;
-
-	set_ir_angle(1, -45);
-	calculateRatio();
+	get_front_ir_dists(&frontLeft, &frontRight);
+	bool leftCloser;
+	if (frontLeft<frontRight)
+	{
+		leftCloser = true;
+		set_ir_angle(1, -45);
+		previousFront = frontLeft;
+	}
+	else
+	{
+		leftCloser = false;
+		set_ir_angle(0, 45);
+		previousFront = frontRight;
+	}
+	
 	while(1)
 	{
+		get_front_ir_dists(&frontLeft,&frontRight);
 		distanceTravelled(mapping);
-		finalValue = calculateMotorValue(&frontleft, &frontright, &total, speed);
-		stopped(&leftBumper, &rightBumper);
-		checkWalls(frontleft, frontright, speed, finalValue);
-		log_trail();
-		if(frontright <= STOPPINGDISTANCE)
+		if(leftCloser)
 		{
-			set_motors(0, 0);
-			break;
+			finalValue = calculateMotorValue(&frontLeft,&previousFront, &total, speed);
+			checkWalls(frontRight, speed, finalValue, leftCloser);
+			if(frontRight <= STOPPINGDISTANCE)
+			{
+				set_motors(0, 0);
+				break;
+			}
 		}
-		//set_point(mapping->x/10, mapping->y/10);
+		else
+		{
+			finalValue = calculateMotorValue(&frontRight,&previousFront, &total, speed);
+			checkWalls(frontLeft, speed, finalValue, leftCloser);
+			if(frontLeft <= STOPPINGDISTANCE)
+			{
+				set_motors(0, 0);
+				break;
+			}
+		}
+		stopped(&leftBumper, &rightBumper);
+		
+		log_trail();
+		
 		printf("Added : %f\t%f\n", mapping->x/10, mapping->y/10);
 		pushNode(list, mapping->x, mapping->y);
 	}

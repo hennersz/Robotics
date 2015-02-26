@@ -78,7 +78,6 @@ void turningProcess(int initialLeft, int initialRight, double target, char direc
                 speedRight = (*leftSign) * 3;
             }
         }
-        printf("T\t%i\t%i\t%f\t%f\t%f\n", differenceLeft, differenceRight, speedLeft, speedRight, target);
         if (differenceLeft == (int)target || differenceRight == (int)target)                     //it reached the desired angle
         {
             if(speed > 65 && corrected == true)             //checks the angle again

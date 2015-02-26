@@ -54,7 +54,6 @@ int tooClose(Node *node, Mapping *mapping)
 int calculateSpeedOffset(Mapping *mapping, Node *node)
 {
 	double targetAngle = findTargetAngle(mapping, node);
-	printf("Target angle:%f\n", targetAngle);
 	double robotAngle = mapping->previousAngle;
 	if(robotAngle > 2*M_PI)
 	{
@@ -64,15 +63,12 @@ int calculateSpeedOffset(Mapping *mapping, Node *node)
 	{
 		robotAngle +=2*M_PI;
 	}
-	printf("Robot angle:%f\n", robotAngle);
 	int speedOffset = (int)toDegrees(robotAngle - targetAngle) * 4;  //
 	
 	if(speedOffset > LIMIT)
 		speedOffset = LIMIT;
 	else if(speedOffset < -LIMIT)
 		speedOffset = -LIMIT;
-
-	printf("SpeedOffset:%d\n", speedOffset);
 
 	return speedOffset;
 }
@@ -81,7 +77,10 @@ void goTo(Mapping *mapping, Node *node, int speed)
 {
 	distanceTravelled(mapping);
 	double speedOffset = (double)calculateSpeedOffset(mapping, node);
-	set_motors(speed, speed + (int)speedOffset);
+	if(speedOffset > 0)
+		set_motors(speed, speed + (int)speedOffset);
+	else
+		set_motors(speed - (int)speedOffset, speed);
 }
 
 void goBack(List *list, Mapping *mapping, int speed)
@@ -98,8 +97,6 @@ void goBack(List *list, Mapping *mapping, int speed)
 		}
 		else
 		{
-			printf("robot position x:%f\ty:%f\n",mapping->x, mapping->y);
-			printf("target node x:%f\ty:%f\n", currentNode->x, currentNode->y);
 			goTo(mapping, currentNode, speed);
 		}
 	}
@@ -121,7 +118,7 @@ int main()
 	wallFollower(70, list, mapping);
 	turn('L', 180, 127);
 	
-	goBack(list, mapping, 50);
+	goBack(list, mapping, 70);
 
 	return 0;
 }
