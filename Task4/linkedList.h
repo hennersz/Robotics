@@ -14,4 +14,4 @@ typedef struct List
 
 void initialiseList(List* list);
 void pushNode(List *list, double x, double y);
-void traverseList(List* list);
+void traverseList(List* list);c
