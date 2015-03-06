@@ -7,65 +7,49 @@
 #include "picomms.h"
 #include "wallfollower.h"
 
-
-typedef struct Edge {
-	bool north;
-	bool south;
-	bool west;
-	bool east;
-}Edge;
-
-/*typedef struct Address {
-	int x;
-	int y;
-}
-*/
-
-
-typedef struct Point {
-	//Adress address;
-	Edge *edges;
-	bool visited;
-	double x;
-	double y;
-}Point;
+#define WIDTH 225
 
 //phase 1: depth first search
 //phase 2: return
 //phase 3: dijkstra's
 
-void initializeEdge(Edge *edge)
-{
-	edge->north = false;
-	edge->south = false;
-	edge->west = false;
-	edge->east = false;
-}
-
-void initializeMaze(Point (*maze)[4][4]) 
+void initializeNodes(bool nodes[16][16])
 {
 	int i, j;
-	for(i = 0; i < 4; i++) 
+	for(i = 0; i < 16; i++)
 	{
-		for(j = 0; j < 4; j++)
+		for(j = 0; j < 16; j++)
 		{
-			maze[i][j]->x = j * 600 + 300;
-			maze[i][j]->y = i * 600 + 300;
-			maze[i][j]->visited = false;
-			initializeEdge(maze[i][j]->edges);
+			nodes[i][j] = false;
 		}
 	}
 }
 
-//void visitPoint()
+void initializeVisited(bool visited[16])
+{
+	int i;
+	for(i = 0; i < 16; i++)
+	{
+		visited[i] = false;
+	}
+}
+
+void addressToCoor(int address, int *x, int *y) 
+{
+	//assuming the middle of 1 is (0, 300)
+	*x = (address % 4) * 600;
+	*y = (address/3) * 600 + 300;
+}
 
 int main() 
 {
-	//Point (*maze)[4][4] = NULL;
 	List *list = malloc(sizeof(List));
 	Mapping *mapping = malloc(sizeof(Mapping));
+	bool nodes[16][16];
+	bool visited[16]; 
 	
-	//initializeMaze(maze);
+	initializeNodes(nodes);
+	initializeVisited(visited);
 	initialiseList(list);
 	initialiseMapping(mapping);
 
@@ -76,8 +60,9 @@ int main()
 	Node* node = malloc(sizeof(Node));
 
 	node->x = 0;
-	node->y = 300;
+	node->y = 300 + WIDTH/2;
 
 	wallFollower(50, mapping, node);
+
 	return 0;
 }

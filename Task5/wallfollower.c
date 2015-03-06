@@ -7,7 +7,7 @@
 #include "mapping.h"
 #include "linkedList.h"
 
-#define TARGETDISTANCE 25
+#define TARGETDISTANCE 27
 #define MAXSPEED 127
 #define STOPPINGDISTANCE 50
 
