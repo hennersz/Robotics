@@ -1,0 +1,1 @@
+void wallFollower(int speed, Mapping* mapping, Node *node);
