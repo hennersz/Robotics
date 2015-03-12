@@ -64,8 +64,8 @@ int calculateMotorValue(int *front,int *previousFront, int *integralValue, int s
 
 void checkWalls(int forwardSensor, int speed, int finalValue, bool leftCloser)
 {
-	//if(forwardSensor < 30)
-	//	set_motors(forwardSensor, forwardSensor);
+	if(forwardSensor < 30)
+		set_motors(forwardSensor, forwardSensor);
 	if (finalValue > 0 && leftCloser)
 		set_motors(speed, finalValue + speed);
 	else if(leftCloser)
@@ -104,27 +104,27 @@ void wallFollower(int speed, List* list, Mapping* mapping)
 		{
 			finalValue = calculateMotorValue(&frontLeft,&previousFront, &total, speed);
 			checkWalls(frontRight, speed, finalValue, leftCloser);
-			//if(frontRight <= STOPPINGDISTANCE)
-			//{
-			//	set_motors(0, 0);
-			//	break;
-			//}
+			if(frontRight <= STOPPINGDISTANCE)
+			{
+				set_motors(0, 0);
+				break;
+			}
 		}
 		else
 		{
 			finalValue = calculateMotorValue(&frontRight,&previousFront, &total, speed);
 			checkWalls(frontLeft, speed, finalValue, leftCloser);
-			//if(frontLeft <= STOPPINGDISTANCE)
-			//{
-			//	set_motors(0, 0);
-			//	break;
-			//}
+			if(frontLeft <= STOPPINGDISTANCE)
+			{
+				set_motors(0, 0);
+				break;
+			}
 		}
 		stopped(&leftBumper, &rightBumper);
 		
 		log_trail();
 		
-		printf("Added : %f\t%f\n", mapping->x/10, mapping->y/10);
+		//printf("Added : %f\t%f\n", mapping->x/10, mapping->y/10);
 		pushNode(list, mapping->x, mapping->y);
 	}
 }

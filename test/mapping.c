@@ -46,6 +46,12 @@ double toRadians(double angle)
 	return (double)(angle * (M_PI/180));
 }
 
+double toDegrees(double angle)
+{
+	//printf("offset = %f\n", angle*(180.0/M_PI));
+	return angle*(180.0/M_PI);
+}
+
 void encoderChange(int* previousLeft, int* previousRight, int* deltaL, int* deltaR)
 {
 	int lEnc, rEnc;
@@ -61,8 +67,7 @@ void straightDistance(int distance, Mapping *m)
 {
 	
 	double angle = m->previousAngle;
-	//printf("degrees = %f\n", degrees);
-	distance = clicksToMM(distance);
+	distance = round(clicksToMM(distance));
 	m->y += (distance * (cos(angle)));
 	m->x += (distance * (sin(angle))); 
 }
@@ -101,10 +106,9 @@ void distanceTravelled(Mapping *mapping)
 {
 	int deltaL, deltaR;
 	encoderChange(&mapping->previousLeft, &mapping->previousRight, &deltaL, &deltaR);
-	printf("previousAngle = %f\n", mapping->previousAngle);
 	if(deltaL == deltaR)
 	{
-		straightDistance((deltaL+deltaR)/2, mapping);
+		straightDistance(deltaL, mapping);
 	}
 	else
 	{
@@ -115,4 +119,23 @@ void distanceTravelled(Mapping *mapping)
 	//double angle = atan((mapping->x)/(mapping->y));
 	//angle *= (180/M_PI);
 	//printf("Distance = %f\tangle = %f\n", distance, angle);
+}
+
+int checkOrientation(Mapping *mapping)
+{
+	double angle = mapping->previousAngle;
+	if(angle > 2*M_PI)
+		angle -= 2*M_PI;
+	else if(angle < 0)
+		angle += 2*M_PI;
+	angle = toDegrees(angle);
+	
+	if(angle > -10 && angle < 10)  //do we need -10?
+		return 0;
+	else if(angle > 80 && angle < 100)
+		return 1;
+	else if(angle > 170 && angle < 190)
+		return 2;
+	else
+		return 3;
 }

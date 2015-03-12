@@ -63,7 +63,7 @@ int calculateSpeedOffset(Mapping *mapping, Node *node)
 	{
 		robotAngle +=2*M_PI;
 	}
-	int speedOffset = (int)toDegrees(robotAngle - targetAngle) * 4;  //
+	int speedOffset = (int)toDegrees(robotAngle - targetAngle) * 4;  
 	
 	if(speedOffset > LIMIT)
 		speedOffset = LIMIT;
@@ -119,6 +119,11 @@ int main()
 	turn('L', 180, 127);
 	
 	goBack(list, mapping, 70);
+
+	turn('R', 180, 127);
+	turn('L', 180, 127);
+
+	printf("angle = %f\n", mapping->previousAngle);
 
 	return 0;
 }

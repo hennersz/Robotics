@@ -219,9 +219,16 @@ class Display():
         zoom_scale.add(order=4)
         zoom_scale.on_drag = self.set_zoom
 
-        self.joystick = sgc.Joystick(pos=(700,600), min=-10, max=10, label="Joystick", label_col=(0,0,0), show_value=False)
+        self.joystick = sgc.Joystick(pos=(600,600), min=-10, max=10, label="Joystick", label_col=(0,0,0), show_value=False)
         #self.joystick.value=0,0
         self.joystick.default_value=0,0
+
+        self.frame_rate = 30
+        self.frame_rate_scale = sgc.Scale(pos=(800, 650), min=30, max=100, label="Frame Rate", label_col=(0,0,0), show_value=0, label_side="top")
+        self.frame_rate_scale.on_drag = self.set_frame_rate
+        
+        self.frame_rate_scale.value = 30
+
         self.joystick.on_drag = self.jb_set
 
         #fps = sgc.FPSCounter(pos=(300,300), clock=self.clock, label="FPS")
@@ -387,6 +394,7 @@ class Display():
             self.left_ir_scale.add(order=6)
             self.right_ir_scale.add(order=7)
             self.joystick.add(order=8)
+            self.frame_rate_scale.add(order=9)
         else:
             self.manual_enabled = False
             self.front_ir_switch.remove()
@@ -395,6 +403,7 @@ class Display():
             self.left_ir_scale.remove()
             self.right_ir_scale.remove()
             self.joystick.remove()
+            self.frame_rate_scale.remove()
 
     def set_noise_model(self, noise_model, noise_value, rand_under):
         self.set_active();
@@ -419,6 +428,10 @@ class Display():
         self.set_active();
         self.zoom=value/10.0
 
+    def set_frame_rate(self,value):
+        self.set_active();
+        self.frame_rate=int(value)
+        
     def reset_posn(self, dummy):
         self.set_active();
         self.world.robot.reset_posn()
@@ -534,6 +547,9 @@ class Display():
                 pass
             elif event.type == QUIT:
                 exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE or event.key:
+                    self.reset_posn(self)    
             else:
                 self.active = True
                 self.app.event(event)
@@ -567,11 +583,13 @@ class Display():
                 self.active = False 
         if self.active:
             #print 30
-            time = self.clock.tick(30)
+            time = self.clock.tick(self.frame_rate)
         else:
             #print 5
-            time = self.clock.tick(5)
+            time = self.clock.tick(self.frame_rate)
+
         self.timenow = self.timenow + time
+        
         sgc.update(time)
         self.app.paint()
         pygame.display.flip()

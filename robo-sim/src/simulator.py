@@ -115,6 +115,7 @@ class Simulator():
                     self.robot.update_position()
                     self.world.check_wheel_drag()
                 self.poll_controller()
+
                 #may sleep in flip
                 self.disp.flip()
         except KeyboardInterrupt:
