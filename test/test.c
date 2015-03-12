@@ -20,7 +20,7 @@
 void initialisePoints(Point *points[16])
 {
 	int i;
-	double offset = WIDTH/2;
+	//double offset = WIDTH/2;
 	for(i = 0; i < 16; i++)
 	{
 		initialisePoint(points[i]);
@@ -298,7 +298,7 @@ void checkTurn(bool turnedRight)
 	}
 }
 
-void turning(int orientation, int targetOrientation, bool walls[16][16], int address)
+void turning(Mapping *mapping, int orientation, int targetOrientation, bool walls[16][16], int address)
 {	
 	int frontAddress;
 	if(orientation == 0)
@@ -317,6 +317,9 @@ void turning(int orientation, int targetOrientation, bool walls[16][16], int add
 		usleep(20);
 		if(!walls[address][frontAddress])
 			checkTurn(false);
+
+		mapping->previousAngle -= M_PI/2;
+		updatePreviousEncoders(&mapping->previousLeft, &mapping->previousRight);
 	}
 	else if(difference == 1 || difference == -3)
 	{
@@ -324,10 +327,12 @@ void turning(int orientation, int targetOrientation, bool walls[16][16], int add
 		usleep(20);
 		if(!walls[address][frontAddress])
 			checkTurn(true);
+		mapping->previousAngle += M_PI/2;
+		updatePreviousEncoders(&mapping->previousLeft, &mapping->previousRight);
 	}
 }
 
-void trackBack(List *list, int address, int orientation)
+void trackBack(Mapping *mapping, List *list, int address, int orientation)
 {
 	int difference;
 	do
@@ -352,13 +357,22 @@ void trackBack(List *list, int address, int orientation)
 	{
 		turn('R', 180, 70);
 		checkTurn(true);
+		mapping->previousAngle += M_PI;
+		updatePreviousEncoders(&mapping->previousLeft, &mapping->previousRight);
 	}
 	else if(orientationDifference == 1 || orientationDifference == -3)
+	{
 		turn('L', 90, 50);
+		mapping->previousAngle -= M_PI/2;
+		updatePreviousEncoders(&mapping->previousLeft, &mapping->previousRight);
+	}
 	else
-		turn('R', 90, 50);
+	{
+		turn('R', 90, 50);	
+		mapping->previousAngle += M_PI/2;
+		updatePreviousEncoders(&mapping->previousLeft, &mapping->previousRight);
+	}
 }
-
 
 int decideDirection(Mapping *mapping, List *list, Point *points[16], bool walls[16][16], int address)
 {
@@ -374,25 +388,25 @@ int decideDirection(Mapping *mapping, List *list, Point *points[16], bool walls[
 	}
 	else if(walls[address][address - 1] && !points[address - 1]->visited)
 	{
-		turning(orientation, 3, walls, address);
+		turning(mapping, orientation, 3, walls, address);
 		return 3;
 	}
 	else if(walls[address][address + 4] && !points[address + 4]->visited)
 	{
-		turning(orientation, 0, walls, address);
+		turning(mapping, orientation, 0, walls, address);
 		return 0;
 	}
 	else if(walls[address][address + 1] && !points[address + 1]->visited)
 	{
-		turning(orientation, 1, walls, address);
+		turning(mapping, orientation, 1, walls, address);
 		return 1;
 	}
 	else if(walls[address][address - 4] && !points[address - 4]->visited)
 	{
-		turning(orientation, 2, walls, address);
+		turning(mapping, orientation, 2, walls, address);
 		return 2;
 	}
-	trackBack(list, address, orientation);
+	trackBack(mapping, list, address, orientation);
 	return 4;
 }
 

@@ -63,6 +63,15 @@ void encoderChange(int* previousLeft, int* previousRight, int* deltaL, int* delt
 	
 }
 
+void updatePreviousEncoders(int* previousLeft, int* previousRight)
+{
+	int lEnc, rEnc;
+	get_motor_encoders(&lEnc, &rEnc);
+	*previousLeft = lEnc;
+	*previousRight = rEnc;
+	
+}
+
 void straightDistance(int distance, Mapping *m)
 {
 	
