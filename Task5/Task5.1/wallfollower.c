@@ -6,24 +6,27 @@
 #include "picomms.h"
 #include "mapping.h"
 
-#define TARGETDISTANCE 36
+#define TARGETDISTANCE 25
 #define MAXSPEED 127
 #define STOPPINGDISTANCE 50
 
-int proportional(int *front)//calculate proportional value of how far the robot is from the wall
+int proportional(int *front, int side)//calculate proportional value of how far the robot is from the wall
 {
-	if(*front > 50)
-		return 0;
+	if(*front > 50 && side > 30)
+		return 10;
+	else if (*front > 50)
+		return side - TARGETDISTANCE;
 	else
-		return *front - TARGETDISTANCE;
+		return (*front + side)/2 - TARGETDISTANCE;
 }
 
-int differential(int *front,int* previousFront) //Rate of change of distance from the wall between 2 readings
+int differential(int *front,int* previousFront, int side, int* previousSide) //Rate of change of distance from the wall between 2 readings
 {	
-	if(*front > 50)
+	if(*front > 50 && side > 30)
 		return 0;
-	int value = *front - *previousFront;
+	int value = ((*front - *previousFront)+(side-*previousSide))/2;
 	*previousFront = *front;
+	*previousSide = side;
 	return value;
 
 }
@@ -44,14 +47,14 @@ void stopped(int *lBump, int *rBump)
 
 
 
-int calculateMotorValue(int *front,int *previousFront, int *integralValue, int speed)
+int calculateMotorValue(int *front,int *previousFront,int side, int* previousSide, int *integralValue, int speed)
 {																	
-	int differentialValue = differential(front, previousFront);
-	int proportionalValue = proportional(front);
+	int differentialValue = differential(front, previousFront, side, previousSide);
+	int proportionalValue = proportional(front, side);
 	*integralValue +=proportionalValue;
 	if (*integralValue > 100 && *integralValue < -100)   //Limit the impact of integral value
 		*integralValue = 0;
-	double finalValue = proportionalValue * (speed/10) + differentialValue * 30 + *integralValue * 0.5;
+	double finalValue = proportionalValue * (speed/10) + differentialValue * 20 + *integralValue * 0.1;
 
 	if(finalValue > MAXSPEED)		//filters high or low speeds
 		finalValue = MAXSPEED;
