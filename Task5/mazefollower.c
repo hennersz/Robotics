@@ -12,12 +12,10 @@
 
 void stop()
 {
-	printf("stopped\n");
 	int frontLeft = 0, frontRight = 0;
 	get_front_ir_dists(&frontLeft, &frontRight);
 	while(frontRight>FULLSTOP)
 	{
-		get_front_ir_dists(&frontLeft, &frontRight);
 		set_motors(frontRight, frontRight);
 	}
 	set_motors(0,0);
@@ -31,29 +29,24 @@ void setMotors(int finalValue, int speed)
 	}
 	else
 	{
-		set_motors(speed - finalValue, speed);
+		set_motors(speed + finalValue, speed);
 	}
 }
-
-
 
 void phase1(int speed, Mapping* mapping)
 {
 	printf("started phase 1\n");
-	int frontLeft = 0, frontRight = 0, finalValue, previousFront = 0;
+	int frontLeft, frontRight, finalValue, previousFront;
 	int leftBumper,rightBumper;
 	int total = 0;
+	double xDifference, yDifference, distance;
 	get_front_ir_dists(&frontLeft, &frontRight);
-	previousFront = frontLeft;
 	set_ir_angle(1, -45);
-	printf("x:%f, y%f\n",mapping->x,mapping->y);
-	while(!((mapping->x<0)&&(mapping->y<0)&&(frontRight<STOPPINGDISTANCE)))
+	while((mapping->x>=0)&&(mapping->y>=0)&&(frontRight>STOPPINGDISTANCE))
 	{
 		get_front_ir_dists(&frontLeft,&frontRight);
 		distanceTravelled(mapping);
-		stopped(&leftBumper,&rightBumper);
 		finalValue = calculateMotorValue(&frontLeft,&previousFront, &total, speed);
-		printf("finalValue %i\n",finalValue);
 		setMotors(finalValue, speed);
 	}
 	stop();
