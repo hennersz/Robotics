@@ -223,11 +223,11 @@ class Display():
         #self.joystick.value=0,0
         self.joystick.default_value=0,0
 
-        self.frame_rate = 30
-        self.frame_rate_scale = sgc.Scale(pos=(800, 650), min=30, max=100, label="Frame Rate", label_col=(0,0,0), show_value=0, label_side="top")
-        self.frame_rate_scale.on_drag = self.set_frame_rate
+        #self.frame_rate = 90
+        #self.frame_rate_scale = sgc.Scale(pos=(800, 650), min=90, max=100, label="Frame Rate", label_col=(0,0,0), show_value=0, label_side="top")
+        #self.frame_rate_scale.on_drag = self.set_frame_rate
         
-        self.frame_rate_scale.value = 30
+        #self.frame_rate_scale.value = 90
 
         self.joystick.on_drag = self.jb_set
 
@@ -394,7 +394,7 @@ class Display():
             self.left_ir_scale.add(order=6)
             self.right_ir_scale.add(order=7)
             self.joystick.add(order=8)
-            self.frame_rate_scale.add(order=9)
+            #self.frame_rate_scale.add(order=9)
         else:
             self.manual_enabled = False
             self.front_ir_switch.remove()
@@ -403,7 +403,7 @@ class Display():
             self.left_ir_scale.remove()
             self.right_ir_scale.remove()
             self.joystick.remove()
-            self.frame_rate_scale.remove()
+            #self.frame_rate_scale.remove()
 
     def set_noise_model(self, noise_model, noise_value, rand_under):
         self.set_active();
@@ -428,9 +428,9 @@ class Display():
         self.set_active();
         self.zoom=value/10.0
 
-    def set_frame_rate(self,value):
-        self.set_active();
-        self.frame_rate=int(value)
+    #def set_frame_rate(self,value):
+    #    self.set_active();
+    #    self.frame_rate=int(value)
         
     def reset_posn(self, dummy):
         self.set_active();
@@ -583,10 +583,10 @@ class Display():
                 self.active = False 
         if self.active:
             #print 30
-            time = self.clock.tick(self.frame_rate)
+            time = self.clock.tick(30)
         else:
             #print 5
-            time = self.clock.tick(self.frame_rate)
+            time = self.clock.tick(5)
 
         self.timenow = self.timenow + time
         

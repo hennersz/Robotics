@@ -18,6 +18,7 @@ typedef struct List
 
 void initialiseList(List* list);
 void pushNode(List *list, double x, double y, int address);
+void pushNode2(List *list, Point *point);
 void popNode(List *list);
 void traverseList(List* list);
 void initialisePoint(Point *point);

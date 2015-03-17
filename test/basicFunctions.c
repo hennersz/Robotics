@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <stdbool.h>
 #include "picomms.h"
+#include "mapping.h"
 
 double stoppingPoint (double speed)    //determines when to switch from actual speed to percentage speed
 {
@@ -35,7 +36,7 @@ void wheelSigns(char direction, int* leftSign, int* rightSign)
     }
 }
 
-void turningProcess(int initialLeft, int initialRight, double target, char direction, double speed)
+void turningProcess(Mapping *mapping, int initialLeft, int initialRight, double target, char direction, double speed)
 {
     
     int *leftcount = malloc(sizeof(int)), *rightcount = malloc(sizeof(int)), *leftSign = malloc(sizeof(int)), *rightSign = malloc(sizeof(int));
@@ -45,6 +46,7 @@ void turningProcess(int initialLeft, int initialRight, double target, char direc
     wheelSigns(direction, leftSign, rightSign);
     while (1)
     {
+        distanceTravelled(mapping);
         previousLeftCount = *leftcount;
         previousRightCount = *rightcount;
         get_motor_encoders(leftcount, rightcount);
@@ -96,7 +98,7 @@ void turningProcess(int initialLeft, int initialRight, double target, char direc
     free(leftcount); free(rightcount); free(leftSign); free(rightSign);
 }
 
-void turn (char direction, double angle, double speed)
+void turn (Mapping *mapping, char direction, double angle, double speed)
 {
     int *left = malloc(sizeof(int));
     int *right = malloc(sizeof(int));
@@ -106,9 +108,9 @@ void turn (char direction, double angle, double speed)
     double ratio = 2.365;                            //represents a 1 degree turn in terms of the encoder
     double encoder = ratio*angle;
     if (direction == 'L')
-        turningProcess(initialLeft, initialRight, encoder,direction, speed);
+        turningProcess(mapping, initialLeft, initialRight, encoder,direction, speed);
     else if (direction == 'R')
-        turningProcess(initialLeft, initialRight, encoder,direction, speed);
+        turningProcess(mapping, initialLeft, initialRight, encoder,direction, speed);
     free(left);
     free(right);
 }

@@ -3,15 +3,16 @@
 #include <stdbool.h>
 #include <math.h>
 #include <unistd.h>
+#include "dijkstra.h"
 #include "picomms.h"
 #include "mapping.h"
-#include "linkedList.h"
 #include "basicFunctions.h"
 
 #define LIMIT 20
 #define WIDTH 225
+#define WALLLIMIT 10
 #define WHEELDIAM 96
-#define MINIMUM_DISTANCE 120
+#define MINIMUM_DISTANCE 180
 #define MINDIST2 30
 #define TURNINGSPEED 1
 #define SENSOR_OFFSET 1
@@ -20,7 +21,6 @@
 void initialisePoints(Point *points[16])
 {
 	int i;
-	//double offset = WIDTH/2;
 	for(i = 0; i < 16; i++)
 	{
 		initialisePoint(points[i]);
@@ -64,17 +64,9 @@ void printWalls(bool walls[16][16])
 
 double findTargetAngle(Mapping *mapping, Point *point)
 {
-	double xDifference = point->x - mapping->x;
-	double yDifference = point->y - mapping->y;
-	double targetAngle = atan(xDifference/yDifference);
-	if(point->y < mapping-> y)
-	{
-		targetAngle += M_PI;
-	}
-	else if(point->x < mapping -> x)
-	{
-		targetAngle += 2*M_PI;
-	}
+	double deltaX = point->x - mapping->x;
+	double deltaY = point->y - mapping->y;
+	double targetAngle = atan2(deltaX, deltaY);
 	return targetAngle;
 }
 
@@ -93,20 +85,26 @@ int tooClose(Point *point, Mapping *mapping, double minDistance)
 	}
 }
 
-int calculateSpeedOffset(Mapping *mapping, Point *point)
+int calculateSpeedOffset(Mapping *mapping, Point *point, int orientation)
 {
 	double targetAngle = findTargetAngle(mapping, point);
 	double robotAngle = mapping->previousAngle;
-	if(robotAngle > 2*M_PI)
+	if(robotAngle > M_PI)
 	{
 		robotAngle -= 2*M_PI;
 	}
-	else if (robotAngle < 0) 
+	else if (robotAngle < -M_PI) 
 	{
 		robotAngle +=2*M_PI;
 	}
-	int speedOffset = (int)toDegrees(robotAngle - targetAngle);
+	double angleDifference = robotAngle - targetAngle;
 	
+	if(angleDifference > M_PI)
+		angleDifference -= 2*M_PI;
+	else if(angleDifference < -M_PI)
+		angleDifference += 2*M_PI;
+
+	int speedOffset = (int)toDegrees(angleDifference)/2;
 	if(speedOffset > LIMIT)
 		speedOffset = LIMIT;
 	else if(speedOffset < -LIMIT)
@@ -115,10 +113,10 @@ int calculateSpeedOffset(Mapping *mapping, Point *point)
 	return speedOffset;
 }
 
-void goTo(Mapping *mapping, Point *point, int speed)
+void goTo(Mapping *mapping, Point *point, int speed, int orientation)
 {
 	distanceTravelled(mapping);
-	double speedOffset = (double)calculateSpeedOffset(mapping, point);
+	double speedOffset = (double)calculateSpeedOffset(mapping, point, orientation);
 	if(speedOffset > 0)
 		set_motors(speed, speed + (int)speedOffset);
 	else
@@ -130,19 +128,19 @@ void findNextPoint(Mapping *mapping, Point *point, Point *targetPoint)
 	double deltaX = targetPoint->x - mapping->x;
 	double deltaY = targetPoint->y - mapping->y;
 	double angle = atan2(deltaY, deltaX);
-	point->x = mapping->x + MINIMUM_DISTANCE * cos(angle);
-	point->y = mapping->y + MINIMUM_DISTANCE * sin(angle);
+	point->x = mapping->x + (MINIMUM_DISTANCE * cos(angle));
+	point->y = mapping->y + (MINIMUM_DISTANCE * sin(angle));
+
 	set_point(point->x/10, point->y/10);
 }
 
-void goToPoint(Mapping *mapping, Point *targetPoint, Point *tempPoint, int speed)
+void goToPoint(Mapping *mapping, Point *targetPoint, Point *tempPoint, int speed, int orientation)
 {
 	findNextPoint(mapping, tempPoint, targetPoint); 
-	//set_point((int)mapping->x/10, (int)mapping->y/10);
-	goTo(mapping, tempPoint, speed);
+	goTo(mapping, tempPoint, speed, orientation);
 }
 
-void preparePoint(Mapping *mapping, Point *targetPoint, int speed)
+void preparePoint(Mapping *mapping, Point *targetPoint, int speed, int orientation)
 {
 	Point *tempPoint = malloc(sizeof(Point));
 	initialisePoint(tempPoint);
@@ -150,91 +148,38 @@ void preparePoint(Mapping *mapping, Point *targetPoint, int speed)
 
 	while(!tooClose(targetPoint, mapping, MINIMUM_DISTANCE))
 	{
-		goToPoint(mapping, targetPoint, tempPoint, speed);
+		goToPoint(mapping, targetPoint, tempPoint, speed, orientation);
 	}	
 	free(tempPoint);
 }
 
-void updateWalls(Mapping *mapping, int checkedWalls[3], bool walls[16][16], int address)
+void updateWalls(Mapping *mapping, int checkedWalls[3], bool walls[16][16], int address, int orientation)
 {
-	int orientation = checkOrientation(mapping);
+	int additionArray[4] = {-1, 4, 1, -4};
+	printf("WALLS LEFT: %i\t WALLS STRAIGHT: %i\t WALLS RIGHT: %i\n", checkedWalls[0], checkedWalls[1], checkedWalls[2]);
 
-	if(orientation == 0)
+	if(checkedWalls[0] > WALLLIMIT && address + additionArray[orientation%4] > 0 
+		&& address + additionArray[orientation%4] < 16)
 	{
-		if(checkedWalls[0] > 10)
-		{
-			walls[address][address - 1] = true;
-			walls[address - 1][address] = true;
-		}
-		if(checkedWalls[1] > 10)
-		{
-			walls[address][address + 4] = true;
-			walls[address + 4][address] = true;
-		}
-		if(checkedWalls[2] > 10)
-		{
-			walls[address][address + 1] = true;
-			walls[address + 1][address] = true;
-		}
+		walls[address][address + additionArray[orientation%4]] = true;
+		walls[address + additionArray[orientation%4]][address] = true;
 	}
-	else if(orientation == 1)
+	if(checkedWalls[1] > WALLLIMIT && address + additionArray[(orientation + 1)%4] > 0
+		&& address + additionArray[(orientation + 1)%4] < 16)
 	{
-		if(checkedWalls[0] > 10)
-		{
-			walls[address][address + 4] = true;
-			walls[address + 4][address] = true;
-		}
-		if(checkedWalls[1] > 10)
-		{
-			walls[address][address + 1] = true;
-			walls[address + 1][address] = true;
-		}
-		if(checkedWalls[2] > 10)
-		{
-			walls[address][address - 4] = true;
-			walls[address - 4][address] = true;
-		}
+		walls[address][address + additionArray[(orientation + 1)%4]] = true;
+		walls[address + additionArray[(orientation + 1)%4]][address] = true;
 	}
-	else if(orientation == 2)
+	if(checkedWalls[2] > WALLLIMIT && address + additionArray[(orientation + 2)%4] > 0
+		&& address + additionArray[(orientation + 2)%4] < 16)
 	{
-		if(checkedWalls[0] > 10)
-		{
-			walls[address][address + 1] = true;
-			walls[address + 1][address] = true;
-		}
-		if(checkedWalls[1] > 10)
-		{
-			walls[address][address - 4] = true;
-			walls[address - 4][address] = true;
-		}
-		if(checkedWalls[2] > 10)
-		{
-			walls[address][address - 1] = true;
-			walls[address - 1][address] = true;
-		}
-	}
-	else 
-	{
-		if(checkedWalls[0] > 10)
-		{
-			walls[address][address - 4] = true;
-			walls[address - 4][address] = true;
-		}
-		if(checkedWalls[1] > 10)
-		{
-			walls[address][address - 1] = true;
-			walls[address - 1][address] = true;
-		}
-		if(checkedWalls[2] > 10)
-		{
-			walls[address][address + 4] = true;
-			walls[address + 4][address] = true;
-		}
+		walls[address][address + additionArray[(orientation + 2)%4]] = true;
+		walls[address + additionArray[(orientation + 2)%4]][address] = true;
 	}
 }
 
 
-void scanForWalls(Mapping *mapping, List *list, Point *targetPoint, int speed, bool walls[16][16], int address)
+void scanForWalls(Mapping *mapping, Point *targetPoint, int speed, bool walls[16][16], int address, int orientation)
 {
 	int checkedWalls[3];
 	checkedWalls[0] = 0;
@@ -247,7 +192,7 @@ void scanForWalls(Mapping *mapping, List *list, Point *targetPoint, int speed, b
 	initialisePoint(tempPoint);
 	while(!tooClose(targetPoint, mapping, MINDIST2))
 	{
-		goToPoint(mapping, targetPoint, tempPoint, speed);
+		goToPoint(mapping, targetPoint, tempPoint, speed, orientation);
 		get_front_ir_dists(&frontleft, &frontright);
 		get_side_ir_dists(&sideleft, &sideright);
 		usfront = get_us_dist();
@@ -260,11 +205,9 @@ void scanForWalls(Mapping *mapping, List *list, Point *targetPoint, int speed, b
 			checkedWalls[1]++;
 	}
 	set_motors(0, 0);
-	updateWalls(mapping, checkedWalls, walls, address);
+	updateWalls(mapping, checkedWalls, walls, address, orientation);
 	free(tempPoint);
 	targetPoint->visited = true;
-	pushNode(list, targetPoint->x, targetPoint->y, address);
-
 }
 
 void checkTurn(bool turnedRight)
@@ -313,101 +256,87 @@ void turning(Mapping *mapping, int orientation, int targetOrientation, bool wall
 	int difference = targetOrientation - orientation;
 	if(difference == -1 || difference == 3)
 	{
-		turn('L', 90, 50);
+		turn(mapping, 'L', 90, 50);
 		usleep(20);
-		if(!walls[address][frontAddress])
+		if(frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])
 			checkTurn(false);
-
-		mapping->previousAngle -= M_PI/2;
-		updatePreviousEncoders(&mapping->previousLeft, &mapping->previousRight);
 	}
 	else if(difference == 1 || difference == -3)
 	{
-		turn('R', 90, 50);
+		turn(mapping, 'R', 90, 50);
 		usleep(20);
-		if(!walls[address][frontAddress])
+		if(frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])
 			checkTurn(true);
-		mapping->previousAngle += M_PI/2;
-		updatePreviousEncoders(&mapping->previousLeft, &mapping->previousRight);
 	}
 }
 
-void trackBack(Mapping *mapping, List *list, int address, int orientation)
+int decideDirection(Mapping *mapping, Point *points[16], bool walls[16][16], int address, int orientation)
 {
-	int difference;
-	do
-	{
-		popNode(list);
-		difference = address - list->last->address;
-	}
-	while(difference == 0);
-
-	if(difference == -4)
-		difference += 4;
-	else if(difference == -1)
-		difference += 2;
-	else if(difference == 4)
-		difference -= 2;
-	else
-		difference += 2;
-	int orientationDifference = orientation - difference;
-	printf("Difference = %i\torientationDifference = %i\n", difference, orientationDifference);
-	printf("targetAddress = %i\n", list->last->address);
-	if(orientationDifference == 2 || orientationDifference == -2)
-	{
-		turn('R', 180, 70);
-		checkTurn(true);
-		mapping->previousAngle += M_PI;
-		updatePreviousEncoders(&mapping->previousLeft, &mapping->previousRight);
-	}
-	else if(orientationDifference == 1 || orientationDifference == -3)
-	{
-		turn('L', 90, 50);
-		mapping->previousAngle -= M_PI/2;
-		updatePreviousEncoders(&mapping->previousLeft, &mapping->previousRight);
-	}
-	else
-	{
-		turn('R', 90, 50);	
-		mapping->previousAngle += M_PI/2;
-		updatePreviousEncoders(&mapping->previousLeft, &mapping->previousRight);
-	}
-}
-
-int decideDirection(Mapping *mapping, List *list, Point *points[16], bool walls[16][16], int address)
-{
-	int orientation = checkOrientation(mapping);
-	printf("orientation = %i\n\n", orientation);
-
+	int additionArray[4] = {-1, 4, 1, -4};
 	if(address == 15)
 	{
-		popNode(list);
-		turn('R', 180, 70);
+		turn(mapping, 'R', 180, 70);
 		checkTurn(true);
-		return 4;
-	}
-	else if(walls[address][address - 1] && !points[address - 1]->visited)
-	{
-		turning(mapping, orientation, 3, walls, address);
-		return 3;
-	}
-	else if(walls[address][address + 4] && !points[address + 4]->visited)
-	{
-		turning(mapping, orientation, 0, walls, address);
-		return 0;
-	}
-	else if(walls[address][address + 1] && !points[address + 1]->visited)
-	{
-		turning(mapping, orientation, 1, walls, address);
-		return 1;
-	}
-	else if(walls[address][address - 4] && !points[address - 4]->visited)
-	{
-		turning(mapping, orientation, 2, walls, address);
 		return 2;
 	}
-	trackBack(mapping, list, address, orientation);
-	return 4;
+	else if(address + additionArray[orientation%4] > -1 && //turning left
+			address + additionArray[orientation%4] < 16 &&
+			walls[address][address + additionArray[orientation%4]] &&  
+			!points[address + additionArray[orientation%4]]->visited)
+	{
+		int targetOrientation = (orientation + 3) % 4;
+		printf("LEFT: orientation = %i\ttargetOrientation = %i\n", orientation, targetOrientation);
+		turning(mapping, orientation, targetOrientation, walls, address);
+		return targetOrientation;
+	}
+	else if(address + additionArray[(orientation + 1)%4] > -1 && //going straight
+			address + additionArray[(orientation + 1)%4] < 16 &&
+			walls[address][address + additionArray[(orientation + 1)%4]] && 
+			!points[address + additionArray[(orientation + 1)%4]]->visited)
+	{
+		printf("STRAIGHT: targetOrientation = %i\n", orientation);
+		turning(mapping, orientation, orientation, walls, address);
+		return orientation;
+	}
+	else if(address + additionArray[(orientation + 2)%4] > -1 && //turning right
+			address + additionArray[(orientation + 2)%4] < 16 &&
+			walls[address][address + additionArray[(orientation + 2)%4]] && 
+			!points[address + additionArray[(orientation + 2)%4]]->visited)
+	{
+		int targetOrientation = (orientation + 1) % 4;
+		printf("RIGHT: targetOrientation = %i\n", targetOrientation);
+		turning(mapping, orientation, targetOrientation, walls, address);
+		return targetOrientation;
+	}
+	else if(address + additionArray[orientation%4] > -1 &&
+			address + additionArray[orientation%4] < 16 &&
+		walls[address][address + additionArray[orientation%4]]) {
+		int targetOrientation = (orientation + 3) % 4;
+		printf("LEFT FOLLOWING: orientation = %i\ttargetOrientation = %i\n", orientation, targetOrientation);
+		turning(mapping, orientation, targetOrientation, walls, address);
+		return targetOrientation;
+	}
+	else if(address + additionArray[(orientation + 1)%4] > -1 &&
+		address + additionArray[(orientation + 1)%4] < 16 &&
+		walls[address][address + additionArray[(orientation + 1)%4]]) {
+		printf("STRAIGHT FOLLOWING: targetOrientation = %i\n", orientation);
+		turning(mapping, orientation, orientation, walls, address);
+		return orientation;
+	}
+	else if(address + additionArray[(orientation + 2)%4] > -1 &&
+		address + additionArray[(orientation + 2)%4] < 16 &&
+		walls[address][address + additionArray[(orientation + 2)%4]]) {
+		int targetOrientation = (orientation + 1) % 4;
+		printf("RIGHT FOLLOWING: targetOrientation = %i\n", targetOrientation);
+		turning(mapping, orientation, targetOrientation, walls, address);
+		return targetOrientation;
+	}
+	else {
+		printf("TURNING: 180 degrees\n");
+		turn(mapping, 'R', 180, 70);
+		checkTurn(true);
+		return (orientation + 2) % 4;
+	}
 }
 
 bool visitedEverything(Point *points[16])
@@ -421,32 +350,49 @@ bool visitedEverything(Point *points[16])
 	return true;
 }
 
-void traverseMaze(Mapping *mapping, List *list, bool walls[16][16], Point *points[16], int speed)
+int traverseMaze(Mapping *mapping, bool walls[16][16], Point *points[16], int speed, int *orientation)
 {
 	int address = 0;
-	int orientation = 0;
-
-
+	
 	while(!visitedEverything(points))
 	{
-		printf("address = %i\n\n", address);
-		preparePoint(mapping, points[address], 30);
-		scanForWalls(mapping, list, points[address], 20, walls, address);
+		preparePoint(mapping, points[address], 30, *orientation);
+		scanForWalls(mapping, points[address], 20, walls, address, *orientation);
 		printWalls(walls);
-		orientation = decideDirection(mapping, list, points, walls, address);
+		printf("BEFORE currentOrientation = %i\taddress = %i\n\n", *orientation, address);
+		*orientation = decideDirection(mapping, points, walls, address, *orientation);
 		set_motors(0, 0);
 		
-		if(orientation == 0)
+		if(*orientation == 0)
 			address += 4;
-		else if(orientation == 1)
+		else if(*orientation == 1)
 			address += 1;
-		else if(orientation == 2)
+		else if(*orientation == 2)
 			address -= 4;
-		else if(orientation == 3)
+		else if(*orientation == 3)
 			address -= 1;
-		else 
-			address = list->last->address;
+
+		printf("AFTER currentOrientation = %i\taddress = %i\n\n", *orientation, address);
 	}
+	return address;
+}
+
+void returnToStart(Mapping *mapping, List *list, int orientation)
+{
+	Point *currentNode = list->last;
+	while(currentNode != NULL)
+	{
+		currentNode=currentNode->parent;
+		preparePoint(mapping, currentNode , 30, orientation);
+	}
+	Point *tempPoint = malloc(sizeof(Point));
+	initialisePoint(tempPoint);
+
+	while(!tooClose(currentNode, mapping, MINDIST2))
+	{
+		goToPoint(mapping, currentNode, tempPoint, 30, orientation);
+	}	
+	free(tempPoint);
 }
 
 
@@ -465,8 +411,9 @@ int main()
 	}
 
 	bool walls[16][16];
-	List *list = malloc(sizeof(List));
+	int orientation = 0;
 	Mapping *mapping = malloc(sizeof(Mapping));
+	List *list = malloc(sizeof(List));
 
 	initialiseIR();
 	initialiseList(list);
@@ -474,7 +421,37 @@ int main()
 	initialisePoints(points);
 	initialiseMapping(mapping);
 
-	traverseMaze(mapping, list, walls, points, 20);
+	int address = traverseMaze(mapping, walls, points, 20, &orientation);
+	
+	/*
+	bool walls[16][16] = {{0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},	
+			{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},	
+			{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+			{0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0},
+			{0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0},
+			{0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0}};
+	*/
+	dijkstra(walls, list, points, address);
+	returnToStart(mapping, list, orientation);
+	//return to 0
+	// then turn till orientation is 2
+	//go to (0, 0)
+	//turn 180 degrees
+	//checkturn
+	//cross IR
+	//empty list
+	dijkstra(walls, list, points, 15);
+	//go to 15
 
 	return 0;
 }

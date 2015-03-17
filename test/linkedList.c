@@ -38,6 +38,13 @@ void pushNode(List *list, double x, double y, int address)
 	list->last = newNode;
 }
 
+void pushNode2(List *list, Point *point)
+{
+	list->last->child = point;
+	point->parent = list->last;
+	list->last = point;
+}
+
 void popNode(List *list)
 {
 	Point *temp = list->last;
