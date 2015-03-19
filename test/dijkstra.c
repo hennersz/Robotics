@@ -121,9 +121,9 @@ int findClosestPoint(int distance[16], int point, bool walls[16][16])
 	return minimumAddress;
 }
 
-void findShortestPath(List *list, int distance[16], Point *points[16], bool walls[16][16], int beginPoint)
+void findShortestPath(List *list, int distance[16], Point *points[16], bool walls[16][16], int beginPoint, int endPoint)
 {
-	int address = 0;
+	int address = endPoint;
 	while(address != beginPoint) 
 	{
 		pushNode2(list, points[address]);
@@ -141,7 +141,7 @@ void findShortestPath(List *list, int distance[16], Point *points[16], bool wall
 	}
 }
 
-void dijkstra(bool walls[16][16], List *list, Point *points[16], int beginPoint)
+void dijkstra(bool walls[16][16], List *list, Point *points[16], int beginPoint, int endPoint)
 {
 	int distance[16];
 	bool visited[16];
@@ -159,7 +159,7 @@ void dijkstra(bool walls[16][16], List *list, Point *points[16], int beginPoint)
 			break;
 	}
 	//printf("Exit loop\n");
-	findShortestPath(list, distance, points, walls, beginPoint);
+	findShortestPath(list, distance, points, walls, beginPoint, endPoint);
 }
 
 

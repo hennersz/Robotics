@@ -8,15 +8,15 @@
 #include "mapping.h"
 #include "basicFunctions.h"
 
-#define LIMIT 20
+#define LIMIT 50
 #define WIDTH 225
 #define WALLLIMIT 10
 #define WHEELDIAM 96
-#define MINIMUM_DISTANCE 150
-#define MINDIST2 30
 #define TURNINGSPEED 1
 #define SENSOR_OFFSET 1
 
+int MINIMUM_DISTANCE = 150;
+int MINDIST2 = 30;
 
 void initialisePoints(Point *points[16])
 {
@@ -104,7 +104,7 @@ int calculateSpeedOffset(Mapping *mapping, Point *point, int orientation)
 	else if(angleDifference < -M_PI)
 		angleDifference += 2*M_PI;
 
-	int speedOffset = (int)toDegrees(angleDifference)/2;
+	int speedOffset = (int)toDegrees(angleDifference);
 	if(speedOffset > LIMIT)
 		speedOffset = LIMIT;
 	else if(speedOffset < -LIMIT)
@@ -455,6 +455,26 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16])
 	*/
 }
 
+void scanForEnd(Mapping *mapping, Point *point,int speed)
+{
+	Point *tempPoint = malloc(sizeof(Point));
+	while(!tooClose(point, mapping, MINDIST2))
+	{
+		goToPoint(mapping, point, tempPoint, speed, 0);
+	}
+}
+
+void followList(Mapping *mapping, List *list, int speed)
+{
+	Point *currentNode = list->last;
+	while(currentNode != NULL)
+	{
+		preparePoint(mapping, currentNode, speed, 0);
+		currentNode = currentNode->parent;
+	}
+	scanForEnd(mapping, list->first, speed);
+}
+
 
 
 int main() 
@@ -501,7 +521,7 @@ int main()
 			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0},
 			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0}};
 	*/
-	dijkstra(walls, list, points, address);
+	dijkstra(walls, list, points, address, 0);
 	traverseList(list);
 	returnToStart(mapping, list, walls);
 	turn(mapping, 'R', 180, 50);
@@ -516,9 +536,15 @@ int main()
 	free(list);
 	list = malloc(sizeof(list));
 	initialiseList(list);
-	dijkstra(walls, list, points, 15);
-	returnToStart(mapping,list,walls);
+	dijkstra(walls, list, points, 0, 15);
 	traverseList(list);
+	popNode(list);
+	traverseList(list);
+	printf("address:%i\n", list->first->address);
+	MINIMUM_DISTANCE = 300;
+	MINDIST2 = 50;
+	followList(mapping, list, 50);
+	
 	//go to 15
 
 	return 0;

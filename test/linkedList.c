@@ -48,18 +48,18 @@ void pushNode2(List *list, Point *point)
 
 void popNode(List *list)
 {
-	Point *temp = list->last;
-	list->last = temp->parent;
-	list->last->child = NULL;
+	Point *temp = list->first;
+	list->first = temp->child;
+	list->first->parent = NULL;
 	free(temp);
 }
 
 void traverseList(List* list)
 {
-	Point* currentNode = list->first;
+	Point* currentNode = list->last;
 	while(currentNode!=NULL)
 	{
 		printf("X=%f, Y=%f, address=%d\n",currentNode->x, currentNode->y, currentNode->address);
-		currentNode=currentNode->child;
+		currentNode=currentNode->parent;
 	}
 }
