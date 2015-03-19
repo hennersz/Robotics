@@ -9,6 +9,7 @@
 
 #define STOPPINGDISTANCE 20
 #define FULLSTOP 10
+#define TARGETDISTANCE 45
 
 void stop()
 {
@@ -35,7 +36,14 @@ void setMotors(int finalValue, int speed)
 	}
 }
 
-
+void rightAngleTurn(int* frontLeft, int* frontRight, int speed)
+{
+	while(*frontRight<TARGETDISTANCE)
+	{
+		get_front_ir_dists(frontLeft, frontRight);
+		set_motors(speed + 25, speed);
+	}
+}
 
 void phase1(int speed, Mapping* mapping)
 {
@@ -54,6 +62,7 @@ void phase1(int speed, Mapping* mapping)
 		stopped(&leftBumper,&rightBumper);
 		finalValue = calculateMotorValue(&frontLeft,&previousFront, &total, speed);
 		printf("finalValue %i\n",finalValue);
+		rightAngleTurn(&frontLeft, &frontRight, speed);
 		setMotors(finalValue, speed);
 	}
 	stop();
@@ -69,7 +78,7 @@ int main()
 	initialize_robot();
 	set_origin();
 
-	phase1(50,mapping);
+	phase1(30,mapping);
 
 	return 0;
 }

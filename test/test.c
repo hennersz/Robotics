@@ -12,7 +12,7 @@
 #define WIDTH 225
 #define WALLLIMIT 10
 #define WHEELDIAM 96
-#define MINIMUM_DISTANCE 180
+#define MINIMUM_DISTANCE 150
 #define MINDIST2 30
 #define TURNINGSPEED 1
 #define SENSOR_OFFSET 1
@@ -145,6 +145,7 @@ void preparePoint(Mapping *mapping, Point *targetPoint, int speed, int orientati
 	Point *tempPoint = malloc(sizeof(Point));
 	initialisePoint(tempPoint);
 	set_point((int)targetPoint->x/10, (int)targetPoint->y/10);
+	printf("targetPoint: x = %f, y = %f\n", targetPoint->x, targetPoint->y);
 
 	while(!tooClose(targetPoint, mapping, MINIMUM_DISTANCE))
 	{
@@ -244,7 +245,9 @@ void checkTurn(bool turnedRight)
 void turning(Mapping *mapping, int orientation, int targetOrientation, bool walls[16][16], int address)
 {	
 	int frontAddress;
-	if(orientation == 0)
+	if(address == -1)
+		return;
+	else if(orientation == 0)
 		frontAddress = address + 4;
 	else if(orientation == 1)
 		frontAddress = address + 1;
@@ -377,14 +380,69 @@ int traverseMaze(Mapping *mapping, bool walls[16][16], Point *points[16], int sp
 	return address;
 }
 
-void returnToStart(Mapping *mapping, List *list, int orientation)
+////////////////////////////////henrys return code///////////////////////////////////////////
+
+
+int getOrientation(double angle)
 {
+	//angles are between Pi and -Pi
+	if(angle>(-M_PI)*0.25&&angle<=M_PI*0.25)
+	{
+		return 0;
+	}
+	else if(angle>M_PI*0.25&&angle<=M_PI*0.75)
+	{
+		return 1;
+	}
+	else if ((angle>M_PI*0.75&&angle<=M_PI)||(angle<(-M_PI)*0.75&&angle>-M_PI))
+	{
+		return 2;
+	}
+	else
+	{
+		return 3;
+	}
+}
+
+int getTargetOrientation(Mapping *mapping, Point *targetPoint)
+{
+	double dx = targetPoint->x - mapping->x;
+	double dy = targetPoint->y - mapping->y;
+
+	double targetAngle = atan2(dx,dy);
+	int targetOrientation = getOrientation(targetAngle);
+
+	return targetOrientation;
+}
+
+int getAddress(Mapping *mapping)
+{
+	int x = (int)(mapping->x/600);
+	int y = (int)(mapping->y/600);
+
+	int address = x + 4*y;
+
+	return address;
+}
+
+
+
+void returnToStart(Mapping *mapping, List *list, bool walls[16][16])
+{
+	printf("returning\n");
 	Point *currentNode = list->last;
+	int address, orientation, targetOrientation;
 	while(currentNode != NULL)
 	{
-		currentNode=currentNode->parent;
+		address = getAddress(mapping);
+		orientation = getOrientation(mapping->previousAngle);
+		targetOrientation = getTargetOrientation(mapping, currentNode);
+		turning(mapping, orientation, targetOrientation, walls, address);
+		orientation = getOrientation(mapping->previousAngle);
 		preparePoint(mapping, currentNode , 30, orientation);
+		currentNode=currentNode->parent;
 	}
+	/*
 	Point *tempPoint = malloc(sizeof(Point));
 	initialisePoint(tempPoint);
 
@@ -393,6 +451,8 @@ void returnToStart(Mapping *mapping, List *list, int orientation)
 		goToPoint(mapping, currentNode, tempPoint, 30, orientation);
 	}	
 	free(tempPoint);
+	/
+	*/
 }
 
 
@@ -442,7 +502,10 @@ int main()
 			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0}};
 	*/
 	dijkstra(walls, list, points, address);
-	returnToStart(mapping, list, orientation);
+	traverseList(list);
+	returnToStart(mapping, list, walls);
+	turn(mapping, 'R', 180, 50);
+	checkTurn(true);
 	//return to 0
 	// then turn till orientation is 2
 	//go to (0, 0)
@@ -450,7 +513,12 @@ int main()
 	//checkturn
 	//cross IR
 	//empty list
+	free(list);
+	list = malloc(sizeof(list));
+	initialiseList(list);
 	dijkstra(walls, list, points, 15);
+	returnToStart(mapping,list,walls);
+	traverseList(list);
 	//go to 15
 
 	return 0;

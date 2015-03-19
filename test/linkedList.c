@@ -7,7 +7,8 @@ void initialiseList(List* list)
 	Point* firstNode = malloc(sizeof(Point));
 
 	firstNode->x = 0;
-	firstNode->y = 0;
+	firstNode->y = -300;
+	firstNode->address = -1;
 
 	list->first = firstNode;
 	list->last = firstNode;
@@ -55,10 +56,10 @@ void popNode(List *list)
 
 void traverseList(List* list)
 {
-	Point* currentNode = list->last;
+	Point* currentNode = list->first;
 	while(currentNode!=NULL)
 	{
-		printf("X=%f, Y=%f\n",currentNode->x, currentNode->y);
-		currentNode=currentNode->parent;
+		printf("X=%f, Y=%f, address=%d\n",currentNode->x, currentNode->y, currentNode->address);
+		currentNode=currentNode->child;
 	}
 }

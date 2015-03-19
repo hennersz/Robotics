@@ -6,7 +6,7 @@
 #include "picomms.h"
 #include "mapping.h"
 
-#define TARGETDISTANCE 36
+#define TARGETDISTANCE 25
 #define MAXSPEED 127
 #define STOPPINGDISTANCE 50
 

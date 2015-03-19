@@ -5,7 +5,10 @@
 #include <math.h>
 #include "picomms.h"
 
-#define TARGETDISTANCE 25
+#define TARGETDISTANCE 15
+#define FRONTTARGET 26
+#define SIDETARGET 11
+#define TURNCONSTANT 35
 
 int proportional(int *frontLeft, int *backLeft)		//calculate proportional value of how far the robot is from the wall
 {
@@ -49,12 +52,6 @@ int differential(int *frontLeft, int *frontRight, int *backLeft, int *backRight)
 	return currentAverage - previousAverage;
 }
 
-int integral(int total, int proportionalValue)  //Integral value is sum of all the previous values
-{
-	total += proportionalValue;
-	return total;
-}
-
 void stopped(int *lBump, int *rBump)
 {												//checks to see if the robot has chrashed
 	check_bumpers(lBump, rBump);
@@ -75,8 +72,8 @@ int calculateMotorValue(int *frontLeft, int *frontRight, int *backLeft, int *bac
 {																					
 	int differentialValue = differential(frontLeft, frontRight, backLeft, backRight);
 	int proportionalValue = proportional(frontLeft, backLeft);
-	integralValue = integral(integralValue, proportionalValue);
-	float finalValue = proportionalValue * 2.3 + differentialValue * 30 + integralValue * 0.05;
+	integralValue += proportionalValue;
+	float finalValue = proportionalValue * 2.3 + differentialValue * 40 + integralValue * 0.06;
 	int finalLeftSpeed = speed - finalValue;
 	int finalRightSpeed = speed + finalValue;
 
@@ -94,27 +91,25 @@ int calculateMotorValue(int *frontLeft, int *frontRight, int *backLeft, int *bac
 		return 0;
 }
 
-void checkWalls(int *frontLeft, int *frontRight, int *sideLeft, int *sideRight, float *x, float *y)	//Still not sure about this one!!
+void checkWalls(int *frontLeft, int *frontRight, int *sideLeft, int *sideRight, int speed)	//Still not sure about this one!!
 {
-	if((*frontLeft < 38 && *frontRight < 38) || *frontRight < 15)  //obstacle in front
+	if((*frontLeft < FRONTTARGET && *frontRight < FRONTTARGET) || *frontRight < SIDETARGET)  //obstacle in front
 	{
 		int leftEncoder, rightEncoder;
 		get_motor_encoders(&leftEncoder, &rightEncoder);
 		if(*sideLeft < *sideRight)
-			while((*frontLeft < 38 && *frontRight < 38) || *frontRight < 15)
+			while((*frontLeft < FRONTTARGET || *frontRight < FRONTTARGET) || *frontRight < SIDETARGET)
             {
-                set_motors(10,-10);
+                set_motors(speed + TURNCONSTANT,speed - TURNCONSTANT);
                 get_front_ir_dists(frontLeft, frontRight);
                 get_side_ir_dists(sideLeft, sideRight);
-                //distanceTravelled(&leftEncoder, &rightEncoder, x, y);
             }
 		else
-            while((*frontLeft < 38 && *frontRight < 38) || *frontRight < 15)
+            while((*frontLeft < FRONTTARGET || *frontRight < FRONTTARGET) || *frontRight < SIDETARGET)
             {
-                set_motors(-10,10);
+                set_motors(speed - TURNCONSTANT,speed + TURNCONSTANT);
                 get_front_ir_dists(frontLeft, frontRight);
                 get_side_ir_dists(sideLeft, sideRight);
-                //distanceTravelled(&leftEncoder, &rightEncoder, x, y);
             }
 	}
 }
@@ -125,16 +120,14 @@ void wallFollower(int speed)
 	int sideleft, sideright; 
 	int leftBumper,rightBumper;
 	int leftEncoder, rightEncoder;
-	float x= 0, y = 0;
 	int total = 0;
 	set_ir_angle(1, -45);
 	get_motor_encoders(&leftEncoder, &rightEncoder);
 	while(1)
 	{
 		total = calculateMotorValue(&frontleft, &frontright, &sideleft, &sideright, total, speed);
-		checkWalls(&frontleft, &frontright,&sideleft, &sideright, &x, &y);
+		checkWalls(&frontleft, &frontright,&sideleft, &sideright, speed);
 		stopped(&leftBumper, &rightBumper);
-		//distanceTravelled(&leftEncoder, &rightEncoder, &x, &y);
 	}
 }
 

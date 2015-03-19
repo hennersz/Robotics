@@ -131,12 +131,12 @@ void findShortestPath(List *list, int distance[16], Point *points[16], bool wall
 	}
 	pushNode2(list, points[address]);
 	
-	Point* currentNode = list->first->child;
+	Point* currentNode = list->last;
 	int i = 1;
 	while(currentNode!=NULL)
 	{
 		printf("%i: %i\n", i, currentNode->address);
-		currentNode=currentNode->child;
+		currentNode=currentNode->parent;
 			i++;
 	}
 }
