@@ -6,8 +6,8 @@
 #include <time.h>
 #include "dijkstra.h"
 #include "picomms.h"
-#include "mapping.h"
-#include "basicFunctions.h"
+//#include "basicFunctions.h"
+#include "turning.h"
 
 #define LIMIT 50
 #define WIDTH 225
@@ -132,7 +132,7 @@ void findNextPoint(Mapping *mapping, Point *point, Point *targetPoint)
 	point->x = mapping->x + (MINIMUM_DISTANCE * cos(angle));
 	point->y = mapping->y + (MINIMUM_DISTANCE * sin(angle));
 
-	set_point(point->x/10, point->y/10);
+	//set_point(point->x/10, point->y/10);
 }
 
 void goToPoint(Mapping *mapping, Point *targetPoint, Point *tempPoint, int speed, int orientation)
