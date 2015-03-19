@@ -6,18 +6,18 @@
 #include <time.h>
 #include "dijkstra.h"
 #include "picomms.h"
-#include "mapping.h"
-#include "basicFunctions.h"
+#include "turning.h"
 
 #define LIMIT 50
 #define WIDTH 225
+#define MIDDLEDIST 23
 #define WALLLIMIT 10
 #define WHEELDIAM 96
-#define TURNINGSPEED 1
+#define TURNINGSPEED 3
 #define SENSOR_OFFSET 1
 
-int MINIMUM_DISTANCE = 150;
-int MINDIST2 = 30;
+int MINIMUM_DISTANCE = 130;
+int MINDIST2 = 35;
 
 void initialisePoints(Point *points[16])
 {
@@ -243,6 +243,20 @@ void checkTurn(bool turnedRight)
 	}
 }
 
+void correctPosition(Mapping *mapping)
+{
+	int distance;
+	do {
+		distance  = get_us_dist();
+		distanceTravelled(mapping);
+		if(distance > MIDDLEDIST)
+			set_motors(TURNINGSPEED, TURNINGSPEED);
+		else if(distance < MIDDLEDIST)
+			set_motors(-TURNINGSPEED, -TURNINGSPEED);
+	}
+	while(distance - MIDDLEDIST != 0);
+}
+
 void turning(Mapping *mapping, int orientation, int targetOrientation, bool walls[16][16], int address)
 {	
 	int frontAddress;
@@ -258,6 +272,9 @@ void turning(Mapping *mapping, int orientation, int targetOrientation, bool wall
 		frontAddress = address- 1;
 
 	int difference = targetOrientation - orientation;
+	if(frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])
+		correctPosition(mapping);
+
 	if(difference == -1 || difference == 3)
 	{
 		turn(mapping, 'L', 90, 50);
@@ -279,6 +296,7 @@ int decideDirection(Mapping *mapping, Point *points[16], bool walls[16][16], int
 	int additionArray[4] = {-1, 4, 1, -4};
 	if(address == 15)
 	{
+		correctPosition(mapping);
 		turn(mapping, 'R', 180, 70);
 		checkTurn(true);
 		return (orientation + 2)%4;
@@ -336,6 +354,7 @@ int decideDirection(Mapping *mapping, Point *points[16], bool walls[16][16], int
 		return targetOrientation;
 	}
 	else {
+		correctPosition(mapping);
 		printf("TURNING: 180 degrees\n");
 		turn(mapping, 'R', 180, 70);
 		checkTurn(true);
@@ -358,11 +377,14 @@ int traverseMaze(Mapping *mapping, bool walls[16][16], Point *points[16], int sp
 {
 	int address = 0;
 	
-	while(!visitedEverything(points))
+	while(true)
 	{
 		preparePoint(mapping, points[address], 30, *orientation);
 		scanForWalls(mapping, points[address], 20, walls, address, *orientation);
+		
 		printWalls(walls);
+		if(visitedEverything(points))
+			break;
 		printf("BEFORE currentOrientation = %i\taddress = %i\n\n", *orientation, address);
 		*orientation = decideDirection(mapping, points, walls, address, *orientation);
 		set_motors(0, 0);
@@ -533,17 +555,11 @@ int main()
 	dijkstra(walls, list, points, address, 0);
 	popNode(list);
 	traverseList(list);
+	
 	returnToStart(mapping, list, walls);
 	turn(mapping, 'R', 180, 50);
 	checkTurn(true);
 	crossIRSensors();
-	//return to 0
-	// then turn till orientation is 2
-	//go to (0, 0)
-	//turn 180 degrees
-	//checkturn
-	//cross IR
-	//empty list
 	free(list);
 	list = malloc(sizeof(list));
 	initialiseList(list);

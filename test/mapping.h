@@ -13,5 +13,5 @@ void distanceTravelled(Mapping *mapping);
 void initialiseMapping(Mapping *mapping);
 int checkOrientation(Mapping *mapping);
 double toDegrees(double angle);
-
+double toRadians(double angle);
 void calculateRatio();
