@@ -3,10 +3,11 @@
 #include <stdbool.h>
 #include <math.h>
 #include <unistd.h>
+#include <time.h>
 #include "dijkstra.h"
 #include "picomms.h"
-//#include "basicFunctions.h"
-#include "turning.h"
+#include "mapping.h"
+#include "basicFunctions.h"
 
 #define LIMIT 50
 #define WIDTH 225
@@ -131,7 +132,7 @@ void findNextPoint(Mapping *mapping, Point *point, Point *targetPoint)
 	point->x = mapping->x + (MINIMUM_DISTANCE * cos(angle));
 	point->y = mapping->y + (MINIMUM_DISTANCE * sin(angle));
 
-	//set_point(point->x/10, point->y/10);
+	set_point(point->x/10, point->y/10);
 }
 
 void goToPoint(Mapping *mapping, Point *targetPoint, Point *tempPoint, int speed, int orientation)
@@ -280,7 +281,7 @@ int decideDirection(Mapping *mapping, Point *points[16], bool walls[16][16], int
 	{
 		turn(mapping, 'R', 180, 70);
 		checkTurn(true);
-		return 2;
+		return (orientation + 2)%4;
 	}
 	else if(address + additionArray[orientation%4] > -1 && //turning left
 			address + additionArray[orientation%4] < 16 &&
@@ -462,6 +463,7 @@ void scanForEnd(Mapping *mapping, Point *point,int speed)
 	{
 		goToPoint(mapping, point, tempPoint, speed, 0);
 	}
+	free(tempPoint);
 }
 
 void followList(Mapping *mapping, List *list, int speed)
@@ -475,7 +477,14 @@ void followList(Mapping *mapping, List *list, int speed)
 	scanForEnd(mapping, list->first, speed);
 }
 
-
+void crossIRSensors()
+{
+	set_ir_angle(0, 45);
+	set_ir_angle(1, -45);
+	usleep(1000000);
+	set_ir_angle(0, -45);
+	set_ir_angle(1, 45);
+}
 
 int main() 
 {
@@ -522,10 +531,12 @@ int main()
 			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0}};
 	*/
 	dijkstra(walls, list, points, address, 0);
+	popNode(list);
 	traverseList(list);
 	returnToStart(mapping, list, walls);
 	turn(mapping, 'R', 180, 50);
 	checkTurn(true);
+	crossIRSensors();
 	//return to 0
 	// then turn till orientation is 2
 	//go to (0, 0)
@@ -543,8 +554,13 @@ int main()
 	printf("address:%i\n", list->first->address);
 	MINIMUM_DISTANCE = 300;
 	MINDIST2 = 50;
+	clock_t start, end, diff;
+	start = clock();
 	followList(mapping, list, 50);
-	
+	end = clock();
+	diff = end - start;
+	int msec = diff * 1000 / CLOCKS_PER_SEC;
+	printf("Time taken %d seconds %d milliseconds", msec/1000, msec%1000);
 	//go to 15
 
 	return 0;
