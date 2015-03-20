@@ -148,3 +148,13 @@ int checkOrientation(Mapping *mapping)
 	else
 		return 3;
 }
+
+int addressToX(int address)
+{
+	return (address%4) * 600;
+}
+
+int addressToY(int address)
+{
+	return (address/4) * 600 + 400;
+}

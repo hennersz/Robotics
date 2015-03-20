@@ -14,4 +14,6 @@ void initialiseMapping(Mapping *mapping);
 int checkOrientation(Mapping *mapping);
 double toDegrees(double angle);
 double toRadians(double angle);
+int addressToX(int address);
+int addressToY(int address);
 void calculateRatio();

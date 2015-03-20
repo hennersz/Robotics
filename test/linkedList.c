@@ -8,7 +8,7 @@ void initialiseList(List* list)
 
 	firstNode->x = 0;
 	firstNode->y = -300;
-	firstNode->address = -1;
+	firstNode->address = -4;
 
 	list->first = firstNode;
 	list->last = firstNode;
