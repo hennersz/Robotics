@@ -1,5 +1,5 @@
 #define WIDTH 225
-#define WHEELDIAM 100
+#define WHEELDIAM 95
 
 typedef struct Mapping 
 {

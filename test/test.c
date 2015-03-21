@@ -9,10 +9,8 @@
 #include "turning.h"
 
 #define LIMIT 50
-#define WIDTH 225
 #define MIDDLEDIST 23
 #define WALLLIMIT 10
-#define WHEELDIAM 96
 #define CORRECTSPEED 3
 #define TURNINGSPEED 2
 #define SENSOR_OFFSET 1
