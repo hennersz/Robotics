@@ -1,6 +1,3 @@
-#define WIDTH 225
-#define WHEELDIAM 95
-
 typedef struct Mapping 
 {
 	double previousAngle;
