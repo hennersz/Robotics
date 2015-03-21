@@ -1,5 +1,5 @@
 #define WIDTH 225
-#define WHEELDIAM 100
+#define WHEELDIAM 95
 
 typedef struct Mapping 
 {
@@ -17,6 +17,4 @@ void initialiseMapping(Mapping *mapping);
 int checkOrientation(Mapping *mapping);
 double toDegrees(double angle);
 double toRadians(double angle);
-int addressToX(int address);
-int addressToY(int address);
 void calculateRatio();

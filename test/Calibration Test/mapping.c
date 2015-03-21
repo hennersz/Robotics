@@ -7,6 +7,7 @@
 #include "linkedList.h"
 #include "mapping.h"
 
+
 double ratio;
 
 void initialiseMapping(Mapping *mapping)
@@ -144,14 +145,4 @@ int checkOrientation(Mapping *mapping)
 		return 2;
 	else
 		return 3;
-}
-
-int addressToX(int address)
-{
-	return (address%4) * 600;
-}
-
-int addressToY(int address)
-{
-	return (address/4) * 600 + 400;
 }
