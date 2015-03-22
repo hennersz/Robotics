@@ -17,7 +17,7 @@
 #define TURNINGSPEED 2
 #define SENSOR_OFFSET 1
 
-int MINIMUM_DISTANCE = 150;
+int MINIMUM_DISTANCE = 130;
 int MINDIST2 = 35;
 
 typedef struct AdjacentSquares
@@ -223,7 +223,6 @@ void scanForWalls(Mapping *mapping, Point *targetPoint, int speed, bool walls[16
 
 void checkTurn(Mapping *mapping, bool turnedRight)
 {
-	printf("checkTurn\n");
 	int front, side;
 	if(turnedRight)
 	{
@@ -264,7 +263,6 @@ void checkTurn(Mapping *mapping, bool turnedRight)
 
 void correctPosition(Mapping *mapping)
 {
-	printf("correctPosition\n");
 	int distance;
 	do {
 		distance  = get_us_dist();
@@ -277,85 +275,33 @@ void correctPosition(Mapping *mapping)
 	while(distance - MIDDLEDIST != 0);
 }	
 
-void updateCoordinates(Mapping *mapping, bool left, double average, int orientation, int address)
-{
-	average *= 10; //convert to mm
-	double difference;
-	if(orientation == 0)
-	{
-		if(left)
-			difference = (300.0 - (double)(WIDTH/2)) - average;
-		else	
-			difference = average - (300.0 - (double)(WIDTH/2));
-		mapping->x = addressToX(address) + difference;
-		mapping->y = addressToY(address);
-	}
+void turning(Mapping *mapping, int orientation, int targetOrientation, bool walls[16][16], int address)
+{	
+	int frontAddress;
+	if(address == -1)
+		return;
+	else if(orientation == 0)
+		frontAddress = address + 4;
 	else if(orientation == 1)
-	{
-		if(left)
-			difference = (300.0 - (double)(WIDTH/2)) - average;
-		else 
-			difference = average - (300.0 - (double)(WIDTH/2));
-		mapping->y = addressToY(address) + difference;	
-		mapping->x = addressToX(address);
-	}
+		frontAddress = address + 1;
 	else if(orientation == 2)
-	{
-		if(left)
-			difference = average - (300.0 - (double)(WIDTH/2));
-		else	
-			difference = (300.0 - (double)(WIDTH/2)) - average;
-		mapping->x = addressToX(address) + difference;
-		mapping->y = addressToY(address);
-	}
-	else if(orientation == 3)
-	{
-		if(left)
-			difference = average - (300.0 - (double)(WIDTH/2));
-		else 
-			difference = (300.0 - (double)(WIDTH/2)) - average;
-		printf("ADDRESS = %i\n", address);
-		mapping->y = addressToY(address) + difference;	
-		mapping->x = addressToX(address);
-	}
-}
-
-void findOrientation(int orientation, int address, int *frontAddress, int *leftAddress, int *rightAddress)
-{
-	if(orientation == 0)
-	{
-		*frontAddress = address + 4;
-		*leftAddress = address - 1;
-		*rightAddress = address + 1;
-	}
-	else if(orientation == 1)
-	{
-		*frontAddress = address + 1;
-		*leftAddress = address + 4;
-		*rightAddress = address - 4;
-	}
-	else if(orientation == 2)
-	{
-		*frontAddress = address - 4;
-		*leftAddress = address + 1;
-		*rightAddress = address - 1;
-	}
+		frontAddress = address - 4;
 	else
-	{
-		*frontAddress = address- 1;
-		*leftAddress = address - 4;
-		*rightAddress = address + 4;
-	}
-}
+		frontAddress = address- 1;
 
+<<<<<<< HEAD
 void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int leftAddress, int rightAddress,
  bool walls[16][16], int orientation)
 {
 	if((frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])
 		|| ((frontAddress < 0 || frontAddress > 15)&&frontAddress!=-4))
+=======
+	int difference = targetOrientation - orientation;
+	if(frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])
+>>>>>>> parent of 834ca6b... fixed updating the coordinates
 	{
-		printf("correctingCoordinates\n");
 		correctPosition(mapping);
+<<<<<<< HEAD
 		int front, side;
 		double average;
 		if((leftAddress > -1 && leftAddress < 16 && !walls[address][leftAddress])
@@ -508,9 +454,12 @@ void turning(Mapping *mapping, int orientation, int targetOrientation, bool wall
 	if(address == -1)
 		return;
 	findOrientation(orientation, address, &frontAddress, &leftAddress, &rightAddress);
+=======
+		mapping->x = addressToX(address);
+		mapping->y = addressToY(address);
+	}
+>>>>>>> parent of 834ca6b... fixed updating the coordinates
 
-	int difference = targetOrientation - orientation;
-	correctingCoordinates(mapping, address, frontAddress, leftAddress, rightAddress, walls, orientation);
 	if(difference == -1 || difference == 3)
 	{
 		turn(mapping, 'L', 90, 50);
@@ -543,10 +492,6 @@ int decideDirection(Mapping *mapping, Point *points[16], bool walls[16][16], int
 	if(address == 15)
 	{
 		correctPosition(mapping);
-		int front = get_front_ir_dist(0);
-		int side = get_side_ir_dist(0);
-		double average = (front + side)/2;
-		updateCoordinates(mapping, true, average, orientation, address);
 		turn(mapping, 'R', 180, 70);
 		checkTurn(mapping, true);
 		return (orientation + 2)%4;
@@ -605,10 +550,6 @@ int decideDirection(Mapping *mapping, Point *points[16], bool walls[16][16], int
 	}
 	else {
 		correctPosition(mapping);
-		int front = get_front_ir_dist(0);
-		int side = get_side_ir_dist(0);
-		double average = (front + side)/2;
-		updateCoordinates(mapping, true, average, orientation, address);
 		printf("TURNING: 180 degrees\n");
 		turn(mapping, 'R', 180, 70);
 		checkTurn(mapping, true);
@@ -702,6 +643,7 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 		currentNode=currentNode->parent;
 	}
 	correctPosition(mapping);
+
 }
 
 void followList(Mapping *mapping, List *list, int speed)
@@ -712,8 +654,8 @@ void followList(Mapping *mapping, List *list, int speed)
 		preparePoint(mapping, currentNode, speed, 0);
 		currentNode = currentNode->parent;
 	}
-	printf("Exit: currentNode->address = %i\n", currentNode->child->address);
-	scanForEnd(mapping, currentNode->child, speed);
+	printf("Exit: currentNode->address = %i\n", currentNode->address);
+	scanForEnd(mapping, list->first, speed);
 }
 
 void crossIRSensors()
@@ -763,7 +705,7 @@ int main()
 	list = malloc(sizeof(list));
 	initialiseList(list);
 	dijkstra(walls, list, points, 0, 15);
-	MINIMUM_DISTANCE = 300;
+	MINIMUM_DISTANCE = 350;
 	MINDIST2 = 50;
 	followList(mapping, list, 50);
 
