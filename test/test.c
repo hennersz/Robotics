@@ -12,13 +12,21 @@
 #define WIDTH 225
 #define MIDDLEDIST 23
 #define WALLLIMIT 10
-#define WHEELDIAM 96
-#define CORRECTSPEED 3
+#define WHEELDIAM 95
+#define CORRECTSPEED 6
 #define TURNINGSPEED 2
 #define SENSOR_OFFSET 1
 
 int MINIMUM_DISTANCE = 150;
 int MINDIST2 = 35;
+
+typedef struct AdjacentSquares
+{
+	int up;
+	int down;
+	int left;
+	int right;
+}AdjacentSquares;
 
 void initialisePoints(Point *points[16])
 {
@@ -344,14 +352,14 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
  bool walls[16][16], int orientation)
 {
 	if((frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])
-		|| (frontAddress < 0 || frontAddress > 15))
+		|| ((frontAddress < 0 || frontAddress > 15)&&frontAddress!=-4))
 	{
 		printf("correctingCoordinates\n");
 		correctPosition(mapping);
 		int front, side;
 		double average;
 		if((leftAddress > -1 && leftAddress < 16 && !walls[address][leftAddress])
-		|| ((leftAddress < 0 || leftAddress > 15) && leftAddress != -4))
+		|| (leftAddress < 0 || leftAddress > 15))
 		{
 			printf("USING LEFT SENSORS\n");
 			front = get_front_ir_dist(0);
@@ -382,6 +390,118 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 	}
 }
 
+AdjacentSquares getAdjacentSquares(bool walls[16][16], int address)
+{
+	AdjacentSquares adjacentSquares;
+
+	switch(address)
+    {
+        case 0:
+            adjacentSquares.up = !walls[address][address+4];
+			adjacentSquares.left = 1;
+			adjacentSquares.right = !walls[address][address+1];
+			adjacentSquares.down = 0;
+            break;
+        case 1:
+            adjacentSquares.up = !walls[address][address+4];
+			adjacentSquares.left = !walls[address][address-1];
+			adjacentSquares.right = !walls[address][address+1];
+			adjacentSquares.down = 1;
+            break;
+        case 2:
+            adjacentSquares.up = !walls[address][address+4];
+			adjacentSquares.left = !walls[address][address-1];
+			adjacentSquares.right = !walls[address][address+1];
+			adjacentSquares.down = 0;
+            break;
+        case 3:
+            adjacentSquares.up = !walls[address][address+4];
+			adjacentSquares.left = !walls[address][address-1];
+			adjacentSquares.right = 1;
+			adjacentSquares.down = 1;
+            break;
+        case 4:
+            adjacentSquares.up = !walls[address][address+4];
+			adjacentSquares.left = 1;
+			adjacentSquares.right = !walls[address][address+1];
+			adjacentSquares.down = !walls[address][address-4];
+            break;
+        case 7:
+            adjacentSquares.up = !walls[address][address+4];
+			adjacentSquares.left = !walls[address][address-1];
+			adjacentSquares.right = 1;
+			adjacentSquares.down = !walls[address][address-4];
+            break;
+        case 8:
+            adjacentSquares.up = !walls[address][address+4];
+			adjacentSquares.left = 1;
+			adjacentSquares.right = !walls[address][address+1];
+			adjacentSquares.down = !walls[address][address-4];
+            break;
+        case 11:
+            adjacentSquares.up = !walls[address][address+4];
+			adjacentSquares.left = !walls[address][address-1];
+			adjacentSquares.right = 1;
+			adjacentSquares.down = !walls[address][address-4];
+            break;
+        case 12:
+            adjacentSquares.up = 1;
+			adjacentSquares.left = 1;
+			adjacentSquares.right = !walls[address][address+1];
+			adjacentSquares.down = !walls[address][address-4];
+            break;
+        case 13:
+            adjacentSquares.up = 1;
+			adjacentSquares.left = !walls[address][address-1];
+			adjacentSquares.right = !walls[address][address+1];
+			adjacentSquares.down = !walls[address][address-4];
+            break;
+        case 14:
+            adjacentSquares.up = 1;
+			adjacentSquares.left = !walls[address][address-1];
+			adjacentSquares.right = !walls[address][address+1];
+			adjacentSquares.down = !walls[address][address-4];
+            break;
+        case 15:
+            adjacentSquares.up = 1;
+			adjacentSquares.left = !walls[address][address-1];
+			adjacentSquares.right = 1;
+			adjacentSquares.down = !walls[address][address-4];
+            break;
+        default:
+            adjacentSquares.up = !walls[address][address+4];
+			adjacentSquares.left = !walls[address][address-1];
+			adjacentSquares.right = !walls[address][address+1];
+			adjacentSquares.down = !walls[address][address-4];
+    }
+
+    return adjacentSquares;
+}
+
+int adjacentWalls(AdjacentSquares adjacentSquares)
+{
+	int adjacentWalls;
+	adjacentWalls = adjacentSquares.up + adjacentSquares.left + adjacentSquares.right + adjacentSquares.down;
+
+	return adjacentWalls;
+}
+
+bool isCorner(AdjacentSquares adjacentSquares)
+{
+	if((adjacentSquares.up||adjacentSquares.down)&&(adjacentSquares.left||adjacentSquares.right))
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void updateCoordinates2(bool walls[16][16], int address)
+{
+	AdjacentSquares adjacentSquares = getAdjacentSquares(walls, address);
+}
 void turning(Mapping *mapping, int orientation, int targetOrientation, bool walls[16][16], int address)
 {	
 	int frontAddress, leftAddress, rightAddress;
@@ -598,8 +718,8 @@ void followList(Mapping *mapping, List *list, int speed)
 
 void crossIRSensors()
 {
-	set_ir_angle(0, 45);
-	set_ir_angle(1, -45);
+	set_ir_angle(0, 90);
+	set_ir_angle(1, -90);
 	usleep(1000000);
 	set_ir_angle(0, -45);
 	set_ir_angle(1, 45);
