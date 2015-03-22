@@ -12,21 +12,13 @@
 #define WIDTH 225
 #define MIDDLEDIST 23
 #define WALLLIMIT 10
-#define WHEELDIAM 95
-#define CORRECTSPEED 6
+#define WHEELDIAM 96
+#define CORRECTSPEED 3
 #define TURNINGSPEED 2
 #define SENSOR_OFFSET 1
 
-int MINIMUM_DISTANCE = 130;
+int MINIMUM_DISTANCE = 150;
 int MINDIST2 = 35;
-
-typedef struct AdjacentSquares
-{
-	int up;
-	int down;
-	int left;
-	int right;
-}AdjacentSquares;
 
 void initialisePoints(Point *points[16])
 {
@@ -223,6 +215,7 @@ void scanForWalls(Mapping *mapping, Point *targetPoint, int speed, bool walls[16
 
 void checkTurn(Mapping *mapping, bool turnedRight)
 {
+	printf("checkTurn\n");
 	int front, side;
 	if(turnedRight)
 	{
@@ -263,6 +256,7 @@ void checkTurn(Mapping *mapping, bool turnedRight)
 
 void correctPosition(Mapping *mapping)
 {
+	printf("correctPosition\n");
 	int distance;
 	do {
 		distance  = get_us_dist();
@@ -275,37 +269,89 @@ void correctPosition(Mapping *mapping)
 	while(distance - MIDDLEDIST != 0);
 }	
 
-void turning(Mapping *mapping, int orientation, int targetOrientation, bool walls[16][16], int address)
-{	
-	int frontAddress;
-	if(address == -1)
-		return;
-	else if(orientation == 0)
-		frontAddress = address + 4;
+void updateCoordinates(Mapping *mapping, bool left, double average, int orientation, int address)
+{
+	average *= 10; //convert to mm
+	double difference;
+	if(orientation == 0)
+	{
+		if(left)
+			difference = (300.0 - (double)(WIDTH/2)) - average;
+		else	
+			difference = average - (300.0 - (double)(WIDTH/2));
+		mapping->x = addressToX(address) + difference;
+		mapping->y = addressToY(address);
+	}
 	else if(orientation == 1)
-		frontAddress = address + 1;
+	{
+		if(left)
+			difference = (300.0 - (double)(WIDTH/2)) - average;
+		else 
+			difference = average - (300.0 - (double)(WIDTH/2));
+		mapping->y = addressToY(address) + difference;	
+		mapping->x = addressToX(address);
+	}
 	else if(orientation == 2)
-		frontAddress = address - 4;
-	else
-		frontAddress = address- 1;
+	{
+		if(left)
+			difference = average - (300.0 - (double)(WIDTH/2));
+		else	
+			difference = (300.0 - (double)(WIDTH/2)) - average;
+		mapping->x = addressToX(address) + difference;
+		mapping->y = addressToY(address);
+	}
+	else if(orientation == 3)
+	{
+		if(left)
+			difference = average - (300.0 - (double)(WIDTH/2));
+		else 
+			difference = (300.0 - (double)(WIDTH/2)) - average;
+		printf("ADDRESS = %i\n", address);
+		mapping->y = addressToY(address) + difference;	
+		mapping->x = addressToX(address);
+	}
+}
 
-<<<<<<< HEAD
+void findOrientation(int orientation, int address, int *frontAddress, int *leftAddress, int *rightAddress)
+{
+	if(orientation == 0)
+	{
+		*frontAddress = address + 4;
+		*leftAddress = address - 1;
+		*rightAddress = address + 1;
+	}
+	else if(orientation == 1)
+	{
+		*frontAddress = address + 1;
+		*leftAddress = address + 4;
+		*rightAddress = address - 4;
+	}
+	else if(orientation == 2)
+	{
+		*frontAddress = address - 4;
+		*leftAddress = address + 1;
+		*rightAddress = address - 1;
+	}
+	else
+	{
+		*frontAddress = address- 1;
+		*leftAddress = address - 4;
+		*rightAddress = address + 4;
+	}
+}
+
 void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int leftAddress, int rightAddress,
  bool walls[16][16], int orientation)
 {
 	if((frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])
-		|| ((frontAddress < 0 || frontAddress > 15)&&frontAddress!=-4))
-=======
-	int difference = targetOrientation - orientation;
-	if(frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])
->>>>>>> parent of 834ca6b... fixed updating the coordinates
+		|| (frontAddress < 0 || frontAddress > 15))
 	{
+		printf("correctingCoordinates\n");
 		correctPosition(mapping);
-<<<<<<< HEAD
 		int front, side;
 		double average;
 		if((leftAddress > -1 && leftAddress < 16 && !walls[address][leftAddress])
-		|| (leftAddress < 0 || leftAddress > 15))
+		|| ((leftAddress < 0 || leftAddress > 15) && leftAddress != -4))
 		{
 			printf("USING LEFT SENSORS\n");
 			front = get_front_ir_dist(0);
@@ -336,130 +382,15 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 	}
 }
 
-AdjacentSquares getAdjacentSquares(bool walls[16][16], int address)
-{
-	AdjacentSquares adjacentSquares;
-
-	switch(address)
-    {
-        case 0:
-            adjacentSquares.up = !walls[address][address+4];
-			adjacentSquares.left = 1;
-			adjacentSquares.right = !walls[address][address+1];
-			adjacentSquares.down = 0;
-            break;
-        case 1:
-            adjacentSquares.up = !walls[address][address+4];
-			adjacentSquares.left = !walls[address][address-1];
-			adjacentSquares.right = !walls[address][address+1];
-			adjacentSquares.down = 1;
-            break;
-        case 2:
-            adjacentSquares.up = !walls[address][address+4];
-			adjacentSquares.left = !walls[address][address-1];
-			adjacentSquares.right = !walls[address][address+1];
-			adjacentSquares.down = 0;
-            break;
-        case 3:
-            adjacentSquares.up = !walls[address][address+4];
-			adjacentSquares.left = !walls[address][address-1];
-			adjacentSquares.right = 1;
-			adjacentSquares.down = 1;
-            break;
-        case 4:
-            adjacentSquares.up = !walls[address][address+4];
-			adjacentSquares.left = 1;
-			adjacentSquares.right = !walls[address][address+1];
-			adjacentSquares.down = !walls[address][address-4];
-            break;
-        case 7:
-            adjacentSquares.up = !walls[address][address+4];
-			adjacentSquares.left = !walls[address][address-1];
-			adjacentSquares.right = 1;
-			adjacentSquares.down = !walls[address][address-4];
-            break;
-        case 8:
-            adjacentSquares.up = !walls[address][address+4];
-			adjacentSquares.left = 1;
-			adjacentSquares.right = !walls[address][address+1];
-			adjacentSquares.down = !walls[address][address-4];
-            break;
-        case 11:
-            adjacentSquares.up = !walls[address][address+4];
-			adjacentSquares.left = !walls[address][address-1];
-			adjacentSquares.right = 1;
-			adjacentSquares.down = !walls[address][address-4];
-            break;
-        case 12:
-            adjacentSquares.up = 1;
-			adjacentSquares.left = 1;
-			adjacentSquares.right = !walls[address][address+1];
-			adjacentSquares.down = !walls[address][address-4];
-            break;
-        case 13:
-            adjacentSquares.up = 1;
-			adjacentSquares.left = !walls[address][address-1];
-			adjacentSquares.right = !walls[address][address+1];
-			adjacentSquares.down = !walls[address][address-4];
-            break;
-        case 14:
-            adjacentSquares.up = 1;
-			adjacentSquares.left = !walls[address][address-1];
-			adjacentSquares.right = !walls[address][address+1];
-			adjacentSquares.down = !walls[address][address-4];
-            break;
-        case 15:
-            adjacentSquares.up = 1;
-			adjacentSquares.left = !walls[address][address-1];
-			adjacentSquares.right = 1;
-			adjacentSquares.down = !walls[address][address-4];
-            break;
-        default:
-            adjacentSquares.up = !walls[address][address+4];
-			adjacentSquares.left = !walls[address][address-1];
-			adjacentSquares.right = !walls[address][address+1];
-			adjacentSquares.down = !walls[address][address-4];
-    }
-
-    return adjacentSquares;
-}
-
-int adjacentWalls(AdjacentSquares adjacentSquares)
-{
-	int adjacentWalls;
-	adjacentWalls = adjacentSquares.up + adjacentSquares.left + adjacentSquares.right + adjacentSquares.down;
-
-	return adjacentWalls;
-}
-
-bool isCorner(AdjacentSquares adjacentSquares)
-{
-	if((adjacentSquares.up||adjacentSquares.down)&&(adjacentSquares.left||adjacentSquares.right))
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
-
-void updateCoordinates2(bool walls[16][16], int address)
-{
-	AdjacentSquares adjacentSquares = getAdjacentSquares(walls, address);
-}
 void turning(Mapping *mapping, int orientation, int targetOrientation, bool walls[16][16], int address)
 {	
 	int frontAddress, leftAddress, rightAddress;
 	if(address == -1)
 		return;
 	findOrientation(orientation, address, &frontAddress, &leftAddress, &rightAddress);
-=======
-		mapping->x = addressToX(address);
-		mapping->y = addressToY(address);
-	}
->>>>>>> parent of 834ca6b... fixed updating the coordinates
 
+	int difference = targetOrientation - orientation;
+	correctingCoordinates(mapping, address, frontAddress, leftAddress, rightAddress, walls, orientation);
 	if(difference == -1 || difference == 3)
 	{
 		turn(mapping, 'L', 90, 50);
@@ -492,6 +423,10 @@ int decideDirection(Mapping *mapping, Point *points[16], bool walls[16][16], int
 	if(address == 15)
 	{
 		correctPosition(mapping);
+		int front = get_front_ir_dist(0);
+		int side = get_side_ir_dist(0);
+		double average = (front + side)/2;
+		updateCoordinates(mapping, true, average, orientation, address);
 		turn(mapping, 'R', 180, 70);
 		checkTurn(mapping, true);
 		return (orientation + 2)%4;
@@ -550,6 +485,10 @@ int decideDirection(Mapping *mapping, Point *points[16], bool walls[16][16], int
 	}
 	else {
 		correctPosition(mapping);
+		int front = get_front_ir_dist(0);
+		int side = get_side_ir_dist(0);
+		double average = (front + side)/2;
+		updateCoordinates(mapping, true, average, orientation, address);
 		printf("TURNING: 180 degrees\n");
 		turn(mapping, 'R', 180, 70);
 		checkTurn(mapping, true);
@@ -643,7 +582,6 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 		currentNode=currentNode->parent;
 	}
 	correctPosition(mapping);
-
 }
 
 void followList(Mapping *mapping, List *list, int speed)
@@ -654,14 +592,14 @@ void followList(Mapping *mapping, List *list, int speed)
 		preparePoint(mapping, currentNode, speed, 0);
 		currentNode = currentNode->parent;
 	}
-	printf("Exit: currentNode->address = %i\n", currentNode->address);
-	scanForEnd(mapping, list->first, speed);
+	printf("Exit: currentNode->address = %i\n", currentNode->child->address);
+	scanForEnd(mapping, currentNode->child, speed);
 }
 
 void crossIRSensors()
 {
-	set_ir_angle(0, 90);
-	set_ir_angle(1, -90);
+	set_ir_angle(0, 45);
+	set_ir_angle(1, -45);
 	usleep(1000000);
 	set_ir_angle(0, -45);
 	set_ir_angle(1, 45);
@@ -705,7 +643,7 @@ int main()
 	list = malloc(sizeof(list));
 	initialiseList(list);
 	dijkstra(walls, list, points, 0, 15);
-	MINIMUM_DISTANCE = 350;
+	MINIMUM_DISTANCE = 300;
 	MINDIST2 = 50;
 	followList(mapping, list, 50);
 
