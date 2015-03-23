@@ -214,6 +214,7 @@ void scanForWalls(Mapping *mapping, Point *targetPoint, int speed, bool walls[16
 
 void checkTurn(Mapping *mapping, bool turnedRight)
 {
+	printf("checkTurn\n");
 	int front, side;
 	int left, right, i, averageLeft = 0, averageRight = 0;
 
@@ -239,6 +240,7 @@ void checkTurn(Mapping *mapping, bool turnedRight)
 				set_motors(-TURNINGSPEED, TURNINGSPEED);
 			else
 				set_motors(TURNINGSPEED, -TURNINGSPEED);
+
 		}
 		while(front != side);
 	}
@@ -697,7 +699,7 @@ int main()
 	list = malloc(sizeof(list));
 	initialiseList(list);
 	dijkstra(walls, list, points, 0, 15);
-	MINIMUM_DISTANCE = 380;
+	MINIMUM_DISTANCE = 400;
 	MINDIST2 = 50;
 	followList(mapping, list, 50);
 
