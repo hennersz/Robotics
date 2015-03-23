@@ -700,7 +700,7 @@ int main()
 	list = malloc(sizeof(list));
 	initialiseList(list);
 	dijkstra(walls, list, points, 0, 15);
-	MINIMUM_DISTANCE = 400;
+	MINIMUM_DISTANCE = 350;
 	MINDIST2 = 50;
 	followList(mapping, list, 50);
 
