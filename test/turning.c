@@ -10,7 +10,7 @@
 #include "mapping.h"
 
 #define WIDTH 225
-#define WHEELDIAM 96
+#define WHEELDIAM 95
 #define MAXIMUM 127
 
 double determineTargetAngle(char direction, int angle, double previousAngle)

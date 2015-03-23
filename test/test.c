@@ -12,8 +12,8 @@
 #define WIDTH 225
 #define MIDDLEDIST 23
 #define WALLLIMIT 10
-#define WHEELDIAM 96
-#define CORRECTSPEED 3
+#define WHEELDIAM 95
+#define CORRECTSPEED 6
 #define TURNINGSPEED 2
 #define SENSOR_OFFSET 1
 
@@ -344,33 +344,35 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
  bool walls[16][16], int orientation)
 {
 	if((frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])
-		|| (frontAddress < 0 || frontAddress > 15))
+		|| ((frontAddress < 0 || frontAddress > 15)&& frontAddress!=-4))
 	{
 		printf("correctingCoordinates\n");
 		correctPosition(mapping);
-		int front, side;
+		int front = 0, side = 0, i;
 		double average;
 		if((leftAddress > -1 && leftAddress < 16 && !walls[address][leftAddress])
 		|| ((leftAddress < 0 || leftAddress > 15) && leftAddress != -4))
 		{
 			printf("USING LEFT SENSORS\n");
-			front = get_front_ir_dist(0);
-			front += get_front_ir_dist(0);
-			side = get_side_ir_dist(0);
-			side += get_side_ir_dist(0);
-			average = (front + side)/4;
+			for (i = 0; i<10;i++)
+			{
+				front += get_front_ir_dist(0);
+				side += get_side_ir_dist(0);
+			}
+			average = (front + side)/20;
 			updateCoordinates(mapping, true, average, orientation, address);
 		}
 
 		else if((rightAddress > -1 && rightAddress < 16 && !walls[address][rightAddress])
-		|| (rightAddress < 0 || rightAddress > 15))
+		|| ((rightAddress < 0 || rightAddress > 15) && rightAddress != -4))
 		{	
 			printf("USING RIGHT SENSORS\n");
-			front = get_front_ir_dist(1);
-			front += get_front_ir_dist(1);
-			side = get_side_ir_dist(1);
-			side += get_side_ir_dist(1);
-			average = (front + side)/4;
+			for (i = 0; i<10;i++)
+			{
+				front += get_front_ir_dist(1);
+				side += get_side_ir_dist(1);
+			}
+			average = (front + side)/20;
 			updateCoordinates(mapping, false, average, orientation, address);
 		}
 		else 
@@ -565,7 +567,7 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 {
 	printf("returning\n");
 	Point *currentNode = list->last;
-	int targetOrientation;
+	int targetOrientation, i, front = 0, side = 0;
 	while(true)
 	{	
 		if(currentNode->address == address)
@@ -582,6 +584,14 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 		currentNode=currentNode->parent;
 	}
 	correctPosition(mapping);
+	for (i = 0; i<10;i++)
+	{
+		front += get_front_ir_dist(0);
+		side += get_side_ir_dist(0);
+	}
+	average = (front + side)/20;
+	updateCoordinates(mapping, true, average, orientation, -4);
+	mapping->y = (-MIDDLEDIST)*10;
 }
 
 void followList(Mapping *mapping, List *list, int speed)
@@ -643,7 +653,7 @@ int main()
 	list = malloc(sizeof(list));
 	initialiseList(list);
 	dijkstra(walls, list, points, 0, 15);
-	MINIMUM_DISTANCE = 300;
+	MINIMUM_DISTANCE = 380;
 	MINDIST2 = 50;
 	followList(mapping, list, 50);
 

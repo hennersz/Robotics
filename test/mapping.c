@@ -8,7 +8,7 @@
 #include "mapping.h"
 
 #define WIDTH 225
-#define WHEELDIAM 96
+#define WHEELDIAM 95
 
 double ratio;
 
