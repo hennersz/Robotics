@@ -9,13 +9,12 @@
 #include "turning.h"
 
 #define LIMIT 50
-#define MIDDLEDIST 25
+#define MIDDLEDIST 23
 #define WALLLIMIT 10
 #define CORRECTSPEED 6
 #define TURNINGSPEED 2
+#define SENSOR_OFFSET 1
 
-int SENSOR_OFFSETLEFT = 1;
-int SENSOR_OFFSETLRIGHT = 1;
 int MINIMUM_DISTANCE = 150;
 int MINDIST2 = 35;
 
@@ -29,24 +28,6 @@ void initialisePoints(Point *points[16])
 		points[i]->y = (i / 4) * 600 + 400;
 		points[i]->address = i;
 	}
-}
-
-void initialiseSensorOffset()
-{
-	int sideLeft, sideRight;
-	int frontLeft, frontRight;
-	int leftTotal = 0, rightTotal = 0;
-	int i;
-	for(i = 0; i < 10; i++)
-	{
-		get_side_ir_dists(&sideLeft, &sideRight);
-		get_front_ir_dists(&frontLeft, &frontRight);
-		leftTotal += frontLeft - sideLeft;
-		rightTotal += frontRight - sideRight;
-	}
-
-	SENSOR_OFFSETLEFT = leftTotal / 10;
-	SENSOR_OFFSETLRIGHT = rightTotal / 10;
 }
 
 void initialiseWalls(bool walls[16][16])
@@ -246,7 +227,7 @@ void checkTurn(Mapping *mapping, bool turnedRight)
 			else
 				set_motors(TURNINGSPEED, -TURNINGSPEED);
 		}
-		while(front - side > -3 && front - side < 3);
+		while(front != side);
 	}
 	else 
 	{
@@ -654,7 +635,6 @@ int main()
 	initialiseList(list);
 	initialiseWalls(walls);
 	initialisePoints(points);
-	initialiseSensorOffset();
 	initialiseMapping(mapping);
 
 	int address = traverseMaze(mapping, walls, points, 20, &orientation);

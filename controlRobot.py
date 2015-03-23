@@ -16,7 +16,7 @@ DOWN = 1
 RIGHT = 2
 LEFT = 3
 
-TCP_IP = '128.16.79.11'
+TCP_IP = '128.16.79.4'
 TCP_PORT = 55443
 BUFFER_SIZE = 1024
 
@@ -62,12 +62,12 @@ try:
             sys.stdout.flush()
             print 'Backward', speed
         elif keyp == 'd' or keyp == RIGHT:
-            s.send("M LR {0} {1}\n".format(-speed/2, speed/2))
+            s.send("M LR {0} {1}\n".format(speed/2, -speed/2))
             data = s.recv(BUFFER_SIZE)
             sys.stdout.flush()
             print 'Spin Right', speed
         elif keyp == 'a' or keyp == LEFT:
-            s.send("M LR {0} {1}\n".format(speed/2, -speed/2))
+            s.send("M LR {0} {1}\n".format(-speed/2, speed/2))
             data = s.recv(BUFFER_SIZE)
             sys.stdout.flush()            
             print 'Spin Left', speed
