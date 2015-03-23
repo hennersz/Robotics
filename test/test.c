@@ -589,7 +589,7 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 		front += get_front_ir_dist(0);
 		side += get_side_ir_dist(0);
 	}
-	average = (front + side)/20;
+	double average = (front + side)/20;
 	updateCoordinates(mapping, true, average, orientation, -4);
 	mapping->y = (-MIDDLEDIST)*10;
 }
