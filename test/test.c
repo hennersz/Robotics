@@ -17,7 +17,7 @@
 int SENSOR_OFFSETLEFT = 1;
 int SENSOR_OFFSETRIGHT = 1;
 int MINIMUM_DISTANCE = 150;
-int MINDIST2 = 35;
+int MINDIST2 = 30;
 
 void initialisePoints(Point *points[16])
 {
@@ -45,8 +45,8 @@ void initialiseSensorOffset()
 		rightTotal += frontRight - sideRight;
 	}
 
-	SENSOR_OFFSETLEFT = leftTotal / 10;
-	SENSOR_OFFSETRIGHT = rightTotal / 10;
+	SENSOR_OFFSETLEFT = round((double)leftTotal / 10);
+	SENSOR_OFFSETRIGHT = round((double)rightTotal / 10);
 }
 
 void initialiseWalls(bool walls[16][16])
@@ -614,6 +614,7 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 	{	
 		if(currentNode->address == address)
 			currentNode= currentNode->parent;
+		printf("currentAddress = %i\ttargetAddress = %i\n", address, currentNode->address);
 		targetOrientation = getTargetOrientation(orientation, address, currentNode->address);
 		turning(mapping, orientation, targetOrientation, walls, address);
 		orientation = targetOrientation;
