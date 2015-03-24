@@ -637,7 +637,7 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 	}
 	double average = (front + side)/20;
 	updateCoordinates(mapping, true, average, orientation, -4);
-	mapping->y = (-MIDDLEDIST)*10;
+	mapping->y = (-MIDDLEDIST)*10+WIDTH/2;
 }
 
 void followList(Mapping *mapping, List *list, int speed)
