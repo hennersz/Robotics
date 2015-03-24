@@ -26,7 +26,7 @@ void initialisePoints(Point *points[16])
 	{
 		initialisePoint(points[i]);
 		points[i]->x = (i % 4) * 600;
-		points[i]->y = (i / 4) * 600 + 400;
+		points[i]->y = (i / 4) * 600 + 500;
 		points[i]->address = i;
 	}
 }
@@ -41,12 +41,13 @@ void initialiseSensorOffset()
 	{
 		get_side_ir_dists(&sideLeft, &sideRight);
 		get_front_ir_dists(&frontLeft, &frontRight);
-		leftTotal += frontLeft - sideLeft;
-		rightTotal += frontRight - sideRight;
+		leftTotal += (frontLeft - sideLeft);
+		rightTotal += (frontRight - sideRight);
 	}
 
-	SENSOR_OFFSETLEFT = round((double)leftTotal / 10);
-	SENSOR_OFFSETRIGHT = round((double)rightTotal / 10);
+	SENSOR_OFFSETLEFT = round((double)leftTotal / 20);
+	SENSOR_OFFSETRIGHT = round((double)rightTotal / 20);
+	printf("SENSOR_OFFSETLEFT = %i\tSENSOR_OFFSETRIGHT = %i\n", SENSOR_OFFSETLEFT, SENSOR_OFFSETRIGHT);
 }
 
 void initialiseWalls(bool walls[16][16])
@@ -225,9 +226,15 @@ void checkTurn(Mapping *mapping, bool turnedRight)
 		averageRight += right;
 	}
 	if(averageLeft < averageRight)
+	{
 		turnedRight = true;
+		printf("USING LEFT\n");
+	}
 	else
+	{
 		turnedRight = false;
+		printf("USING RIGHT\n");
+	}
 
 	if(turnedRight) //left sensor
 	{
@@ -242,7 +249,7 @@ void checkTurn(Mapping *mapping, bool turnedRight)
 				set_motors(TURNINGSPEED, -TURNINGSPEED);
 
 		}
-		while(front != side);
+		while(abs(front - side) > 1);
 	}
 	else   //right sensor
 	{
@@ -256,7 +263,7 @@ void checkTurn(Mapping *mapping, bool turnedRight)
 			else
 				set_motors(-TURNINGSPEED, TURNINGSPEED);
 		}
-		while(front != side);
+		while(abs(front - side) > 1);
 	}
 }
 
@@ -454,7 +461,7 @@ void correctRobot(Mapping *mapping, bool walls[16][16], int address, int orienta
 			correctPosition(mapping);
 
 	if((leftAddress > -1 && leftAddress < 16 && !walls[address][leftAddress])
-		|| ((leftAddress < 0 || leftAddress > 15) && leftAddress != -4))
+		|| ((leftAddress < 0 || leftAddress > 15) && leftAddress  != -4))
 			checkTurn(mapping, true);
 	else if((rightAddress > -1 && rightAddress < 16 && !walls[address][rightAddress])
 		|| ((rightAddress < 0 || rightAddress > 15) && rightAddress != -4))
