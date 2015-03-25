@@ -9,15 +9,15 @@
 #include "turning.h"
 
 #define LIMIT 50
-#define MIDDLEDIST 22
-#define WALLLIMIT 7
+#define WALLLIMIT 5
 #define CORRECTSPEED 6
 #define TURNINGSPEED 2
 
+int MIDDLEDIST = 26;
 int SENSOR_OFFSETLEFT = 1;
 int SENSOR_OFFSETRIGHT = 1;
 int MINIMUM_DISTANCE = 150;
-int MINDIST2 = 30;
+int MINDIST2 = 50;
 
 void initialisePoints(Point *points[16])
 {
@@ -26,7 +26,11 @@ void initialisePoints(Point *points[16])
 	{
 		initialisePoint(points[i]);
 		points[i]->x = (i % 4) * 600;
+<<<<<<< HEAD
 		points[i]->y = (i / 4) * 600 + 400;
+=======
+		points[i]->y = (i / 4) * 600 + 450;
+>>>>>>> origin/master
 		points[i]->address = i;
 	}
 }
@@ -45,8 +49,8 @@ void initialiseSensorOffset()
 		rightTotal += (frontRight - sideRight);
 	}
 
-	SENSOR_OFFSETLEFT = round((double)leftTotal / 20);
-	SENSOR_OFFSETRIGHT = round((double)rightTotal / 20);
+	SENSOR_OFFSETLEFT = round((double)leftTotal / 40);
+	SENSOR_OFFSETRIGHT = round((double)rightTotal / 40);
 	printf("SENSOR_OFFSETLEFT = %i\tSENSOR_OFFSETRIGHT = %i\n", SENSOR_OFFSETLEFT, SENSOR_OFFSETRIGHT);
 }
 
@@ -215,6 +219,61 @@ void scanForWalls(Mapping *mapping, Point *targetPoint, int speed, bool walls[16
 
 void checkTurn(Mapping *mapping, bool turnedRight)
 {
+	/*printf("checkTurn\n");
+	int front, side;
+	int left, right, i, averageLeft = 0, averageRight = 0;
+
+	for(i = 0; i < 10; i++)
+	{
+		get_front_ir_dists(&left, &right);
+		averageLeft += left;
+		averageRight += right;
+	}
+	if(averageLeft < averageRight)
+	{
+		turnedRight = true;
+		printf("USING LEFT\n");
+	}
+	else
+	{
+		turnedRight = false;
+		printf("USING RIGHT\n");
+	}
+
+	if(turnedRight) //left sensor
+	{
+		do
+		{
+			distanceTravelled(mapping);
+			front = get_front_ir_dist(0) - SENSOR_OFFSETLEFT; //front sensor is further from wall
+			side = get_side_ir_dist(0);
+			if(front > side)
+				set_motors(-TURNINGSPEED, TURNINGSPEED);
+			else
+				set_motors(TURNINGSPEED, -TURNINGSPEED);
+
+		}
+		while(abs(front - side) > 1);
+	}
+	else   //right sensor
+	{
+		do
+		{
+			distanceTravelled(mapping);
+			front = get_front_ir_dist(1) - SENSOR_OFFSETRIGHT;
+			side = get_side_ir_dist(1);
+			if(front > side)
+				set_motors(TURNINGSPEED, -TURNINGSPEED);
+			else
+				set_motors(-TURNINGSPEED, TURNINGSPEED);
+		}
+		while(abs(front - side) > 1);
+	}
+	*/
+}
+
+void checkTurn2(Mapping *mapping, bool turnedRight)
+{
 	printf("checkTurn\n");
 	int front, side;
 	int left, right, i, averageLeft = 0, averageRight = 0;
@@ -266,7 +325,6 @@ void checkTurn(Mapping *mapping, bool turnedRight)
 		while(abs(front - side) > 1);
 	}
 }
-
 void correctPosition(Mapping *mapping)
 {
 	printf("correctPosition\n");
@@ -554,6 +612,10 @@ bool visitedEverything(Point *points[16])
 	int i;
 	for(i = 0; i < 16; i++)
 	{
+		if(i == 6)
+		{
+			i = 7;
+		}
 		if(!points[i]->visited)
 			return false;
 	}
@@ -636,6 +698,7 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 		address = currentNode->address;
 		currentNode=currentNode->parent;
 	}
+	MIDDLEDIST = 35;
 	correctPosition(mapping);
 	for (i = 0; i<10;i++)
 	{
@@ -699,7 +762,7 @@ int main()
 	traverseList(list);
 	returnToStart(mapping, list, walls, orientation, address);
 	turn(mapping, 'R', 180, 50);
-	checkTurn(mapping, true);
+	checkTurn2(mapping, true);
 	set_motors(0, 0);
 	crossIRSensors();
 	free(list);
@@ -707,29 +770,28 @@ int main()
 	list = malloc(sizeof(list));
 	initialiseList(list);
 	dijkstra(walls, list, points, 0, 15);
-	MINIMUM_DISTANCE = 350;
+	MINIMUM_DISTANCE = 400;
 	MINDIST2 = 50;
 	followList(mapping, list, 50);
 
 	return 0;
 }
 
-
-	/*
-	bool walls[16][16] = {{0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},	
-			{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},	
-			{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			{0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			{1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0},
-			{0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-			{0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+/*bool walls[16][16] = {{0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},	
+			{1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},	
+			{0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0},
+			{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			{0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
+			{0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0},
+			{0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0},
+			{0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0},
 			{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0},
-			{0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0},
-			{0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1},
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0},
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0},
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0},
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0}};
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0}};
+
 	*/
