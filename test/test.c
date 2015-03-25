@@ -12,6 +12,7 @@
 #define WALLLIMIT 5
 #define CORRECTSPEED 6
 #define TURNINGSPEED 2
+#define USOFFEST 8
 
 int MIDDLEDIST = 22;
 int SENSOR_OFFSETLEFT = 1;
@@ -26,15 +27,7 @@ void initialisePoints(Point *points[16])
 	{
 		initialisePoint(points[i]);
 		points[i]->x = (i % 4) * 600;
-<<<<<<< HEAD
-		points[i]->y = (i / 4) * 600 + 400;
-=======
-<<<<<<< HEAD
-		points[i]->y = (i / 4) * 600 + 400;
-=======
-		points[i]->y = (i / 4) * 600 + 450;
->>>>>>> origin/master
->>>>>>> origin/master
+		points[i]->y = (i / 4) * 600 + 600;
 		points[i]->address = i;
 	}
 }
@@ -730,11 +723,27 @@ void followList(Mapping *mapping, List *list, int speed)
 
 void crossIRSensors()
 {
-	set_ir_angle(0, 45);
-	set_ir_angle(1, -45);
+	set_ir_angle(0, 90);
+	set_ir_angle(1, -90);
 	usleep(1000000);
 	set_ir_angle(0, -45);
 	set_ir_angle(1, 45);
+}
+
+void initialCalibration(Mapping *mapping)
+{
+	turn(mapping, 'L', 180, 50);
+	int y = get_us_dist();
+	usleep(100000);
+	printf("Measured y value = %i\n",(y+USOFFEST)*10);
+	mapping->y = (y + USOFFEST)*10-300;
+	turn(mapping, 'R', 90, 50);
+	int x = get_us_dist();
+	usleep(100000);
+	printf("Measured x value = %i\n",(x+USOFFEST)*10);
+	mapping->x = (x + USOFFEST)*10-300;
+	turn(mapping, 'R', 90, 50);
+	printf("Initial x:%f\tInitial y:%f\n", mapping->x, mapping->y);
 }
 
 int main() 
@@ -761,6 +770,7 @@ int main()
 	initialisePoints(points);
 	initialiseSensorOffset();
 	initialiseMapping(mapping);
+	//initialCalibration(mapping);
 
 	int address = traverseMaze(mapping, walls, points, 20, &orientation);
 	
