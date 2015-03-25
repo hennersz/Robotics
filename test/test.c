@@ -12,6 +12,7 @@
 #define WALLLIMIT 5
 #define CORRECTSPEED 6
 #define TURNINGSPEED 2
+#define USOFFEST 8
 
 int MIDDLEDIST = 22;
 int SENSOR_OFFSETLEFT = 1;
@@ -722,11 +723,28 @@ void followList(Mapping *mapping, List *list, int speed)
 
 void crossIRSensors()
 {
-	set_ir_angle(0, 45);
-	set_ir_angle(1, -45);
+	set_ir_angle(0, 90);
+	set_ir_angle(1, -90);
 	usleep(1000000);
 	set_ir_angle(0, -45);
 	set_ir_angle(1, 45);
+}
+
+void initialCalibration(Mapping *mapping)
+{
+	turn(mapping, 'L', 180, 50);
+	int y = get_us_dist();
+	if (y>40)
+	usleep(100000);
+	printf("Measured y value = %i\n",(y+USOFFEST)*10);
+	mapping->y = (y + USOFFEST)*10-450;
+	turn(mapping, 'R', 90, 50);
+	int x = get_us_dist();
+	usleep(100000);
+	printf("Measured x value = %i\n",(x+USOFFEST)*10);
+	mapping->x = (x + USOFFEST)*10-300;
+	turn(mapping, 'R', 90, 50);
+	printf("Initial x:%f\tInitial y:%f\n", mapping->x, mapping->y);
 }
 
 int main() 
@@ -753,6 +771,7 @@ int main()
 	initialisePoints(points);
 	initialiseSensorOffset();
 	initialiseMapping(mapping);
+	initialCalibration(mapping);
 
 	int address = traverseMaze(mapping, walls, points, 20, &orientation);
 	
@@ -768,8 +787,9 @@ int main()
 	list = malloc(sizeof(list));
 	initialiseList(list);
 	dijkstra(walls, list, points, 0, 15);
-	MINIMUM_DISTANCE = 400;
+	MINIMUM_DISTANCE = 380;
 	MINDIST2 = 50;
+	initialCalibration(mapping);
 	followList(mapping, list, 50);
 
 	return 0;
