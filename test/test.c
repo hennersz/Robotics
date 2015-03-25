@@ -12,7 +12,6 @@
 #define WALLLIMIT 5
 #define CORRECTSPEED 6
 #define TURNINGSPEED 2
-#define USOFFEST 8
 
 int MIDDLEDIST = 22;
 int SENSOR_OFFSETLEFT = 1;
@@ -27,11 +26,7 @@ void initialisePoints(Point *points[16])
 	{
 		initialisePoint(points[i]);
 		points[i]->x = (i % 4) * 600;
-<<<<<<< HEAD
-		points[i]->y = (i / 4) * 600 + 600;
-=======
 		points[i]->y = (i / 4) * 600 + 400;
->>>>>>> origin/master
 		points[i]->address = i;
 	}
 }
@@ -286,26 +281,18 @@ int closestWall()
 		averageRight += right;
 	}
 	if(averageLeft < averageRight)
-	{
-		if(averageLeft/10 > 30)
-			return 2;
 		return 1;
-	}
 	else
-	{
-		if(averageRight/10 > 30)
-			return 2;
 		return 0;
-	}
 }
 
 void checkTurn2(Mapping *mapping, bool turnedRight)
 {
 	printf("checkTurn\n");
 	int front, side;
-	int temp = closestWall();
+	turnedRight = closestWall();
 
-	if(temp == 1) //left sensor
+	if(turnedRight) //left sensor
 	{
 		do
 		{
@@ -320,7 +307,7 @@ void checkTurn2(Mapping *mapping, bool turnedRight)
 		}
 		while(abs(front - side) > 1);
 	}
-	else if(temp == 0)  //right sensor
+	else   //right sensor
 	{
 		do
 		{
@@ -431,7 +418,7 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 		int front = 0, side = 0, i;
 		double average;
 		if(((leftAddress > -1 && leftAddress < 16 && !walls[address][leftAddress])
-		|| ((leftAddress < 0 || leftAddress > 15) && leftAddress != -4)) && closestWall() == 1)
+		|| ((leftAddress < 0 || leftAddress > 15) && leftAddress != -4)) && closestWall())
 		{
 			printf("USING LEFT SENSORS\n");
 			for (i = 0; i<10;i++)
@@ -443,8 +430,8 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 			updateCoordinates(mapping, true, average, orientation, address);
 		}
 
-		else if(((rightAddress > -1 && rightAddress < 16 && !walls[address][rightAddress])
-		|| ((rightAddress < 0 || rightAddress > 15) && rightAddress != -4)) && closestWall == 0)
+		else if((rightAddress > -1 && rightAddress < 16 && !walls[address][rightAddress])
+		|| ((rightAddress < 0 || rightAddress > 15) && rightAddress != -4))
 		{	
 			printf("USING RIGHT SENSORS\n");
 			for (i = 0; i<10;i++)
@@ -708,25 +695,15 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 		currentNode=currentNode->parent;
 	}
 	MIDDLEDIST = 35;
-	int direction = closestWall();
-
+	int direction = !closestWall();
 	correctPosition(mapping);
-	if(direction == 1 || direction == 0)
+	for (i = 0; i<10;i++)
 	{
-		if(direction == 1)
-			direction = 0;
-		else if(direction == 0)
-			direction = 1;
-		for (i = 0; i<10;i++)
-		{
-			front += get_front_ir_dist(direction);
-			side += get_side_ir_dist(direction);
-		}
-		double average = (front + side)/20;
-		updateCoordinates(mapping, true, average, orientation, -4);
+		front += get_front_ir_dist(direction);
+		side += get_side_ir_dist(direction);
 	}
-	else
-		mapping->x = 0.0;
+	double average = (front + side)/20;
+	updateCoordinates(mapping, true, average, orientation, -4);
 	mapping->y = 0;
 	printf("mapping->x = %f\tmapping->y = %f\n",mapping->x, mapping->y);
 }
@@ -745,27 +722,11 @@ void followList(Mapping *mapping, List *list, int speed)
 
 void crossIRSensors()
 {
-	set_ir_angle(0, 90);
-	set_ir_angle(1, -90);
+	set_ir_angle(0, 45);
+	set_ir_angle(1, -45);
 	usleep(1000000);
 	set_ir_angle(0, -45);
 	set_ir_angle(1, 45);
-}
-
-void initialCalibration(Mapping *mapping)
-{
-	turn(mapping, 'L', 180, 50);
-	int y = get_us_dist();
-	usleep(100000);
-	printf("Measured y value = %i\n",(y+USOFFEST)*10);
-	mapping->y = (y + USOFFEST)*10-300;
-	turn(mapping, 'R', 90, 50);
-	int x = get_us_dist();
-	usleep(100000);
-	printf("Measured x value = %i\n",(x+USOFFEST)*10);
-	mapping->x = (x + USOFFEST)*10-300;
-	turn(mapping, 'R', 90, 50);
-	printf("Initial x:%f\tInitial y:%f\n", mapping->x, mapping->y);
 }
 
 int main() 
@@ -792,7 +753,6 @@ int main()
 	initialisePoints(points);
 	initialiseSensorOffset();
 	initialiseMapping(mapping);
-	//initialCalibration(mapping);
 
 	int address = traverseMaze(mapping, walls, points, 20, &orientation);
 	
