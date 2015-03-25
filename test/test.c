@@ -26,7 +26,15 @@ void initialisePoints(Point *points[16])
 	{
 		initialisePoint(points[i]);
 		points[i]->x = (i % 4) * 600;
+<<<<<<< HEAD
 		points[i]->y = (i / 4) * 600 + 400;
+=======
+<<<<<<< HEAD
+		points[i]->y = (i / 4) * 600 + 400;
+=======
+		points[i]->y = (i / 4) * 600 + 450;
+>>>>>>> origin/master
+>>>>>>> origin/master
 		points[i]->address = i;
 	}
 }
