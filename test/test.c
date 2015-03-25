@@ -27,7 +27,11 @@ void initialisePoints(Point *points[16])
 	{
 		initialisePoint(points[i]);
 		points[i]->x = (i % 4) * 600;
+<<<<<<< HEAD
 		points[i]->y = (i / 4) * 600 + 600;
+=======
+		points[i]->y = (i / 4) * 600 + 400;
+>>>>>>> origin/master
 		points[i]->address = i;
 	}
 }
@@ -282,18 +286,26 @@ int closestWall()
 		averageRight += right;
 	}
 	if(averageLeft < averageRight)
+	{
+		if(averageLeft/10 > 30)
+			return 2;
 		return 1;
+	}
 	else
+	{
+		if(averageRight/10 > 30)
+			return 2;
 		return 0;
+	}
 }
 
 void checkTurn2(Mapping *mapping, bool turnedRight)
 {
 	printf("checkTurn\n");
 	int front, side;
-	turnedRight = closestWall();
+	int temp = closestWall();
 
-	if(turnedRight) //left sensor
+	if(temp == 1) //left sensor
 	{
 		do
 		{
@@ -308,7 +320,7 @@ void checkTurn2(Mapping *mapping, bool turnedRight)
 		}
 		while(abs(front - side) > 1);
 	}
-	else   //right sensor
+	else if(temp == 0)  //right sensor
 	{
 		do
 		{
@@ -419,7 +431,7 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 		int front = 0, side = 0, i;
 		double average;
 		if(((leftAddress > -1 && leftAddress < 16 && !walls[address][leftAddress])
-		|| ((leftAddress < 0 || leftAddress > 15) && leftAddress != -4)) && closestWall())
+		|| ((leftAddress < 0 || leftAddress > 15) && leftAddress != -4)) && closestWall() == 1)
 		{
 			printf("USING LEFT SENSORS\n");
 			for (i = 0; i<10;i++)
@@ -431,8 +443,8 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 			updateCoordinates(mapping, true, average, orientation, address);
 		}
 
-		else if((rightAddress > -1 && rightAddress < 16 && !walls[address][rightAddress])
-		|| ((rightAddress < 0 || rightAddress > 15) && rightAddress != -4))
+		else if(((rightAddress > -1 && rightAddress < 16 && !walls[address][rightAddress])
+		|| ((rightAddress < 0 || rightAddress > 15) && rightAddress != -4)) && closestWall == 0)
 		{	
 			printf("USING RIGHT SENSORS\n");
 			for (i = 0; i<10;i++)
@@ -696,15 +708,25 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 		currentNode=currentNode->parent;
 	}
 	MIDDLEDIST = 35;
-	int direction = !closestWall();
+	int direction = closestWall();
+
 	correctPosition(mapping);
-	for (i = 0; i<10;i++)
+	if(direction == 1 || direction == 0)
 	{
-		front += get_front_ir_dist(direction);
-		side += get_side_ir_dist(direction);
+		if(direction == 1)
+			direction = 0;
+		else if(direction == 0)
+			direction = 1;
+		for (i = 0; i<10;i++)
+		{
+			front += get_front_ir_dist(direction);
+			side += get_side_ir_dist(direction);
+		}
+		double average = (front + side)/20;
+		updateCoordinates(mapping, true, average, orientation, -4);
 	}
-	double average = (front + side)/20;
-	updateCoordinates(mapping, true, average, orientation, -4);
+	else
+		mapping->x = 0.0;
 	mapping->y = 0;
 	printf("mapping->x = %f\tmapping->y = %f\n",mapping->x, mapping->y);
 }
