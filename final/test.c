@@ -7,22 +7,17 @@
 #include "dijkstra.h"
 #include "picomms.h"
 #include "turning.h"
-#include "printMaze.h"
 
 #define LIMIT 50
-#define WALLLIMIT 5
+#define MIDDLEDIST 23
+#define WALLLIMIT 10
 #define CORRECTSPEED 6
 #define TURNINGSPEED 2
-#define USOFFEST 8
+#define SENSOR_OFFSET 1
 
-int MIDDLEDIST = 22;
-int SENSOR_OFFSETLEFT = 1;
-int SENSOR_OFFSETRIGHT = 1;
 int MINIMUM_DISTANCE = 150;
-int MINDIST2 = 50;
+int MINDIST2 = 35;
 
-//Initialising
-//-----------------------------------------------------------------
 void initialisePoints(Point *points[16])
 {
 	int i;
@@ -33,29 +28,6 @@ void initialisePoints(Point *points[16])
 		points[i]->y = (i / 4) * 600 + 400;
 		points[i]->address = i;
 	}
-}
-
-void initialiseSensorOffset()
-{
-	int sideLeft, sideRight;
-	int frontLeft, frontRight;
-	int leftTotal = 0, rightTotal = 0;
-	int i;
-	for(i = 0; i < 10; i++)
-	{
-		get_side_ir_dists(&sideLeft, &sideRight);
-		get_front_ir_dists(&frontLeft, &frontRight);
-		leftTotal += (frontLeft - sideLeft);
-		rightTotal += (frontRight - sideRight);
-	}
-
-	SENSOR_OFFSETLEFT = round((double)leftTotal / 20);
-	SENSOR_OFFSETRIGHT = round((double)rightTotal / 20);
-	if(SENSOR_OFFSETRIGHT > 5)
-		SENSOR_OFFSETRIGHT = 5;
-	if(SENSOR_OFFSETLEFT > 5)
-		SENSOR_OFFSETLEFT = 5;
-	printf("SENSOR_OFFSETLEFT = %i\tSENSOR_OFFSETRIGHT = %i\n", SENSOR_OFFSETLEFT, SENSOR_OFFSETRIGHT);
 }
 
 void initialiseWalls(bool walls[16][16])
@@ -74,37 +46,21 @@ void initialiseIR()
 	set_ir_angle(1, 45);
 }
 
-void initialCalibration(Mapping *mapping)
+void printWalls(bool walls[16][16])
 {
-	turn(mapping, 'L', 180, 50);
-	int y = get_us_dist();
-	if (y>40)
-	usleep(100000);
-	printf("Measured y value = %i\n",(y+USOFFEST)*10);
-	mapping->y = (y + USOFFEST)*10-450;
-	turn(mapping, 'R', 90, 50);
-	int x = get_us_dist();
-	usleep(100000);
-	printf("Measured x value = %i\n",(x+USOFFEST)*10);
-	mapping->x = (x + USOFFEST)*10-300;
-	turn(mapping, 'R', 90, 50);
-	printf("Initial x:%f\tInitial y:%f\n", mapping->x, mapping->y);
+	int i, j;
+	for(i = 0; i < 16; i++)
+		printf("%i\t", i);
+	printf("\n");
+	for(i = 0; i < 16; i++)
+	{
+		printf("%i: ", i);
+		for(j = 0; j < 16; j++)
+			printf("%d\t", walls[i][j]);
+		printf("\n");
+	}
+	printf("\n");
 }
-
-void initialise(Mapping *mapping, List *list, bool walls[16][16], Point *points[16])
-{
-	initialiseIR();
-	initialiseList(list);
-	initialiseWalls(walls);
-	initialisePoints(points);
-	//initialiseSensorOffset();              not reliable for real robot
-	initialiseMapping(mapping);
-	initialCalibration(mapping);
-}
-
-//end of initialising
-//-----------------------------------------------------------------
-//Travelling to points
 
 double findTargetAngle(Mapping *mapping, Point *point)
 {
@@ -197,160 +153,104 @@ void preparePoint(Mapping *mapping, Point *targetPoint, int speed, int orientati
 	}	
 	free(tempPoint);
 }
-//-----------------------------------------------------------------
-//
 
 void updateWalls(Mapping *mapping, int checkedWalls[3], bool walls[16][16], int address, int orientation)
 {
 	int additionArray[4] = {-1, 4, 1, -4};
 	printf("WALLS LEFT: %i\t WALLS STRAIGHT: %i\t WALLS RIGHT: %i\n", checkedWalls[0], checkedWalls[1], checkedWalls[2]);
 
-	if(address + additionArray[orientation%4] > 0 
+	if(checkedWalls[0] > WALLLIMIT && address + additionArray[orientation%4] > 0 
 		&& address + additionArray[orientation%4] < 16)
 	{
-		if(checkedWalls[0] > WALLLIMIT)
-		{
-			walls[address][address + additionArray[orientation%4]] = true;
-			walls[address + additionArray[orientation%4]][address] = true;
-		}
-		else
-		{
-			walls[address][address + additionArray[orientation%4]] = false;
-			walls[address + additionArray[orientation%4]][address] = false;
-		}
+		walls[address][address + additionArray[orientation%4]] = true;
+		walls[address + additionArray[orientation%4]][address] = true;
 	}
-	if(address + additionArray[(orientation + 1)%4] > 0
+	if(checkedWalls[1] > WALLLIMIT && address + additionArray[(orientation + 1)%4] > 0
 		&& address + additionArray[(orientation + 1)%4] < 16)
 	{
-		if(checkedWalls[1] > WALLLIMIT)
-		{
-			walls[address][address + additionArray[(orientation + 1)%4]] = true;
-			walls[address + additionArray[(orientation + 1)%4]][address] = true;
-		}
-		else
-		{
-			walls[address][address + additionArray[(orientation + 1)%4]] = false;
-			walls[address + additionArray[(orientation + 1)%4]][address] = false;	
-		}
+		walls[address][address + additionArray[(orientation + 1)%4]] = true;
+		walls[address + additionArray[(orientation + 1)%4]][address] = true;
 	}
-	if(address + additionArray[(orientation + 2)%4] > 0
+	if(checkedWalls[2] > WALLLIMIT && address + additionArray[(orientation + 2)%4] > 0
 		&& address + additionArray[(orientation + 2)%4] < 16)
 	{
-		if(checkedWalls[2] > WALLLIMIT)
-		{
-			walls[address][address + additionArray[(orientation + 2)%4]] = true;
-			walls[address + additionArray[(orientation + 2)%4]][address] = true;
-		}
-		else 
-		{
-			walls[address][address + additionArray[(orientation + 2)%4]] = false;
-			walls[address + additionArray[(orientation + 2)%4]][address] = false;	
-		}
+		walls[address][address + additionArray[(orientation + 2)%4]] = true;
+		walls[address + additionArray[(orientation + 2)%4]][address] = true;
 	}
 }
 
 
 void scanForWalls(Mapping *mapping, Point *targetPoint, int speed, bool walls[16][16], int address, int orientation)
 {
+	int checkedWalls[3];
+	checkedWalls[0] = 0;
+	checkedWalls[1] = 0;
+	checkedWalls[2] = 0;
+	int frontleft, frontright, sideleft, sideright;
+	int usfront;
+
 	Point *tempPoint = malloc(sizeof(Point));
 	initialisePoint(tempPoint);
 	while(!tooClose(targetPoint, mapping, MINDIST2))
 	{
 		goToPoint(mapping, targetPoint, tempPoint, speed, orientation);
+		get_front_ir_dists(&frontleft, &frontright);
+		get_side_ir_dists(&sideleft, &sideright);
+		usfront = get_us_dist();
+
+		if(frontleft > 30 && sideleft > 30)
+			checkedWalls[0]++;
+		if(frontright > 30 && sideright > 30)
+			checkedWalls[2]++;
+		if(usfront > 40)
+			checkedWalls[1]++;
 	}
-	targetPoint->visited = true;
+	set_motors(0, 0);
+	updateWalls(mapping, checkedWalls, walls, address, orientation);
 	free(tempPoint);
+	targetPoint->visited = true;
 }
 
-//-----------------------------------------------------------------
-//TO DO
-
-void checkTurn(Mapping *mapping, int orientation, bool turnedRight)
-{
-	printf("checkTurn\n");
-	double targetAngle, currentAngle;
-	if(orientation == 0)
-		targetAngle = 0;
-	else if(orientation == 1)
-		targetAngle = M_PI/2;
-	else if(orientation == 2)
-		targetAngle = M_PI;
-	else
-		targetAngle = (3.0/2.0) * M_PI;
-	do
-	{
-		distanceTravelled(mapping);
-		if(mapping->previousAngle < 0)
-			currentAngle = mapping->previousAngle + 2*M_PI;
-		else if(mapping->previousAngle > 2*M_PI)
-			currentAngle = mapping->previousAngle - 2*M_PI;
-		else
-			currentAngle = mapping->previousAngle;
-		if(currentAngle > targetAngle)
-			set_motors(TURNINGSPEED, -TURNINGSPEED);
-		else
-			set_motors(-TURNINGSPEED, TURNINGSPEED);
-		//printf("angle = %f\tcurrentAngle = %f\targetAngle = %f\n", mapping->previousAngle, currentAngle, targetAngle);
-	}
-	while(fabs(currentAngle - targetAngle) > 0.4);
-}
-
-int closestWall()
-{
-	int left, right, i, averageLeft = 0, averageRight = 0;
-
-	for(i = 0; i < 10; i++)
-	{
-		get_front_ir_dists(&left, &right);
-		averageLeft += left;
-		averageRight += right;
-	}
-	if(averageLeft < averageRight)
-		return 1;
-	else
-		return 0;
-}
-
-//-----------------------------------------------------------------
-
-/*
-void checkTurn2(Mapping *mapping, bool turnedRight)
+void checkTurn(Mapping *mapping, bool turnedRight)
 {
 	printf("checkTurn\n");
 	int front, side;
-	turnedRight = closestWall();
-
-	if(turnedRight) //left sensor
+	if(turnedRight)
 	{
 		do
 		{
 			distanceTravelled(mapping);
-			front = get_front_ir_dist(0) - SENSOR_OFFSETLEFT; //front sensor is further from wall
+			front = get_front_ir_dist(0) - SENSOR_OFFSET; //front sensor is further from wall
 			side = get_side_ir_dist(0);
 			if(front > side)
 				set_motors(-TURNINGSPEED, TURNINGSPEED);
 			else
 				set_motors(TURNINGSPEED, -TURNINGSPEED);
-
 		}
-		while(abs(front - side) > 1);
+		while(front != side);
 	}
-	else   //right sensor
+	else 
 	{
 		do
 		{
 			distanceTravelled(mapping);
-			front = get_front_ir_dist(1) - SENSOR_OFFSETRIGHT;
+			front = get_front_ir_dist(1) - SENSOR_OFFSET;
 			side = get_side_ir_dist(1);
 			if(front > side)
 				set_motors(TURNINGSPEED, -TURNINGSPEED);
 			else
 				set_motors(-TURNINGSPEED, TURNINGSPEED);
 		}
-		while(abs(front - side) > 1);
+		while(front != side);
 	}
+	int angle = (mapping->previousAngle * 1000);
+	int pi = M_PI * 1000;
+	angle = angle % (pi/2);
+	if(angle > (pi/4))
+		mapping->previousAngle += (M_PI/2) - (double)angle/1000;
+	else
+		mapping->previousAngle -= (double)angle/1000;
 }
-*/
 
 void correctPosition(Mapping *mapping)
 {
@@ -365,11 +265,8 @@ void correctPosition(Mapping *mapping)
 			set_motors(-CORRECTSPEED, -CORRECTSPEED);
 	}
 	while(distance - MIDDLEDIST != 0);
-	set_motors(0, 0);
 }	
 
-
-//The width of the robot does not equal to the height!!
 void updateCoordinates(Mapping *mapping, bool left, double average, int orientation, int address)
 {
 	average *= 10; //convert to mm
@@ -407,7 +304,7 @@ void updateCoordinates(Mapping *mapping, bool left, double average, int orientat
 			difference = average - (300.0 - (double)(WIDTH/2));
 		else 
 			difference = (300.0 - (double)(WIDTH/2)) - average;
-		//printf("ADDRESS = %i\n", address);
+		printf("ADDRESS = %i\n", address);
 		mapping->y = addressToY(address) + difference;	
 		mapping->x = addressToX(address);
 	}
@@ -447,11 +344,12 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 	if((frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])
 		|| ((frontAddress < 0 || frontAddress > 15)&& frontAddress!=-4))
 	{
+		printf("correctingCoordinates\n");
 		correctPosition(mapping);
 		int front = 0, side = 0, i;
 		double average;
-		if(((leftAddress > -1 && leftAddress < 16 && !walls[address][leftAddress])
-		|| ((leftAddress < 0 || leftAddress > 15) && leftAddress != -4)) && closestWall())
+		if((leftAddress > -1 && leftAddress < 16 && !walls[address][leftAddress])
+		|| ((leftAddress < 0 || leftAddress > 15) && leftAddress != -4))
 		{
 			printf("USING LEFT SENSORS\n");
 			for (i = 0; i<10;i++)
@@ -459,7 +357,7 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 				front += get_front_ir_dist(0);
 				side += get_side_ir_dist(0);
 			}
-			average = (front + side)/20;             //why 20??
+			average = (front + side)/20;
 			updateCoordinates(mapping, true, average, orientation, address);
 		}
 
@@ -487,86 +385,36 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 void turning(Mapping *mapping, int orientation, int targetOrientation, bool walls[16][16], int address)
 {	
 	int frontAddress, leftAddress, rightAddress;
+	if(address == -1)
+		return;
 	findOrientation(orientation, address, &frontAddress, &leftAddress, &rightAddress);
 
 	int difference = targetOrientation - orientation;
+	correctingCoordinates(mapping, address, frontAddress, leftAddress, rightAddress, walls, orientation);
 	if(difference == -1 || difference == 3)
 	{
 		turn(mapping, 'L', 90, 50);
 		usleep(20);
 		if(frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])
-			checkTurn(mapping, targetOrientation, false);
+			checkTurn(mapping, false);
 		else if((frontAddress < 0 || frontAddress > 15) && frontAddress != -4)
-			checkTurn(mapping, targetOrientation, false);
+			checkTurn(mapping, false);
 	}
 	else if(difference == 1 || difference == -3)
 	{
 		turn(mapping, 'R', 90, 50);
 		usleep(20);
 		if(frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])
-			checkTurn(mapping, targetOrientation, true);
+			checkTurn(mapping, true);
 		else if((frontAddress < 0 || frontAddress > 15) && frontAddress != -4)
-			checkTurn(mapping, targetOrientation, true);
+			checkTurn(mapping, true);
 	}
 	else if(difference == 2 || difference == -2)
 	{
 		turn(mapping, 'R', 180, 50);
 		if(frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])
-			checkTurn(mapping, targetOrientation, true);
+			checkTurn(mapping, true);
 	}
-}
-
-void takingMeasurements(int checkedWalls[3])
-{
-	checkedWalls[0] = 0;
-	checkedWalls[1] = 0;
-	checkedWalls[2] = 0;
-	int frontleft, frontright, sideleft, sideright;
-	int usfront, i;	
-
-	for(i = 0; i < 10; i++)
-	{
-		get_front_ir_dists(&frontleft, &frontright);
-		get_side_ir_dists(&sideleft, &sideright);
-		usfront = get_us_dist();
-
-		if(frontleft > 30 && sideleft > 30)
-			checkedWalls[0]++;
-		if(frontright > 30 && sideright > 30)
-			checkedWalls[2]++;
-		if(usfront > 40)
-			checkedWalls[1]++;
-	}
-}
-
-void correctRobot(Mapping *mapping, bool walls[16][16], int address, int orientation)
-{
-	int frontAddress, leftAddress, rightAddress;
-	findOrientation(orientation, address, &frontAddress, &leftAddress, &rightAddress);
-
-	if((frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])
-		|| ((frontAddress < 0 || frontAddress > 15)&& frontAddress!=-4))
-			correctPosition(mapping);
-
-	//This uses the new checkTurn so we do not need to check for walls
-	//if((leftAddress > -1 && leftAddress < 16 && !walls[address][leftAddress])
-	//	|| ((leftAddress < 0 || leftAddress > 15) && leftAddress  != -4))
-	checkTurn(mapping, orientation, true);
-	//else if((rightAddress > -1 && rightAddress < 16 && !walls[address][rightAddress])
-	//	|| ((rightAddress < 0 || rightAddress > 15) && rightAddress != -4))
-	//		checkTurn(mapping, orientation, false);
-
-	correctingCoordinates(mapping, address, frontAddress, leftAddress, rightAddress, walls, orientation);
-}
-
-void takeMeasurements(Mapping *mapping, Point *targetPoint, bool walls[16][16], int address, int orientation)
-{
-	int checkedWalls[3];
-	takingMeasurements(checkedWalls);
-	updateWalls(mapping, checkedWalls, walls, address, orientation);
-	correctRobot(mapping, walls, address, orientation);
-	takingMeasurements(checkedWalls);
-	updateWalls(mapping, checkedWalls, walls, address, orientation);
 }
 
 int decideDirection(Mapping *mapping, Point *points[16], bool walls[16][16], int address, int orientation)
@@ -574,8 +422,13 @@ int decideDirection(Mapping *mapping, Point *points[16], bool walls[16][16], int
 	int additionArray[4] = {-1, 4, 1, -4};
 	if(address == 15)
 	{
+		correctPosition(mapping);
+		int front = get_front_ir_dist(0);
+		int side = get_side_ir_dist(0);
+		double average = (front + side)/2;
+		updateCoordinates(mapping, true, average, orientation, address);
 		turn(mapping, 'R', 180, 70);
-		checkTurn(mapping, (orientation + 2) % 4, true);
+		checkTurn(mapping, true);
 		return (orientation + 2)%4;
 	}
 	else if(address + additionArray[orientation%4] > -1 && //turning left
@@ -631,9 +484,14 @@ int decideDirection(Mapping *mapping, Point *points[16], bool walls[16][16], int
 		return targetOrientation;
 	}
 	else {
+		correctPosition(mapping);
+		int front = get_front_ir_dist(0);
+		int side = get_side_ir_dist(0);
+		double average = (front + side)/2;
+		updateCoordinates(mapping, true, average, orientation, address);
 		printf("TURNING: 180 degrees\n");
 		turn(mapping, 'R', 180, 70);
-		checkTurn(mapping, (orientation + 2) % 4, true);
+		checkTurn(mapping, true);
 		return (orientation + 2) % 4;
 	}
 }
@@ -643,10 +501,6 @@ bool visitedEverything(Point *points[16])
 	int i;
 	for(i = 0; i < 16; i++)
 	{
-		if(i == 6)
-		{
-			i = 7;
-		}
 		if(!points[i]->visited)
 			return false;
 	}
@@ -661,8 +515,8 @@ int traverseMaze(Mapping *mapping, bool walls[16][16], Point *points[16], int sp
 	{
 		preparePoint(mapping, points[address], 30, *orientation);
 		scanForWalls(mapping, points[address], 20, walls, address, *orientation);
-		takeMeasurements(mapping, points[address], walls, address, *orientation);
-		printingMaze(walls);
+		
+		printWalls(walls);
 		if(visitedEverything(points))
 			break;
 		printf("BEFORE currentOrientation = %i\taddress = %i\n\n", *orientation, address);
@@ -716,8 +570,6 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 	{	
 		if(currentNode->address == address)
 			currentNode= currentNode->parent;
-		correctRobot(mapping, walls, address, orientation);
-		printf("currentAddress = %i\ttargetAddress = %i\n", address, currentNode->address);
 		targetOrientation = getTargetOrientation(orientation, address, currentNode->address);
 		turning(mapping, orientation, targetOrientation, walls, address);
 		orientation = targetOrientation;
@@ -725,21 +577,19 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 		if(currentNode->address == -4)
 			break;
 		scanForEnd(mapping, currentNode, 30);
+		
 		address = currentNode->address;
 		currentNode=currentNode->parent;
 	}
-	MIDDLEDIST = 35;
-	int direction = !closestWall();
 	correctPosition(mapping);
 	for (i = 0; i<10;i++)
 	{
-		front += get_front_ir_dist(direction);
-		side += get_side_ir_dist(direction);
+		front += get_front_ir_dist(0);
+		side += get_side_ir_dist(0);
 	}
 	double average = (front + side)/20;
 	updateCoordinates(mapping, true, average, orientation, -4);
-	mapping->y = 0;
-	printf("mapping->x = %f\tmapping->y = %f\n",mapping->x, mapping->y);
+	mapping->y = (-MIDDLEDIST)*10;
 }
 
 void followList(Mapping *mapping, List *list, int speed)
@@ -756,8 +606,8 @@ void followList(Mapping *mapping, List *list, int speed)
 
 void crossIRSensors()
 {
-	set_ir_angle(0, 90);
-	set_ir_angle(1, -90);
+	set_ir_angle(0, 45);
+	set_ir_angle(1, -45);
 	usleep(1000000);
 	set_ir_angle(0, -45);
 	set_ir_angle(1, 45);
@@ -781,15 +631,19 @@ int main()
 	Mapping *mapping = malloc(sizeof(Mapping));
 	List *list = malloc(sizeof(List));
 
-	initialise(mapping, list, walls, points);
-	
+	initialiseIR();
+	initialiseList(list);
+	initialiseWalls(walls);
+	initialisePoints(points);
+	initialiseMapping(mapping);
+
 	int address = traverseMaze(mapping, walls, points, 20, &orientation);
 	
 	dijkstra(walls, list, points, address, 0);
 	traverseList(list);
 	returnToStart(mapping, list, walls, orientation, address);
 	turn(mapping, 'R', 180, 50);
-	//checkTurn2(mapping, true);                CheckTurn2 is not reliable for real robot
+	checkTurn(mapping, true);
 	set_motors(0, 0);
 	crossIRSensors();
 	free(list);
@@ -799,27 +653,27 @@ int main()
 	dijkstra(walls, list, points, 0, 15);
 	MINIMUM_DISTANCE = 380;
 	MINDIST2 = 50;
-	initialCalibration(mapping);
 	followList(mapping, list, 50);
 
 	return 0;
 }
 
-/*bool walls[16][16] = {{0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},	
+
+	/*
+	bool walls[16][16] = {{0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},	
 			{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},	
 			{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			{0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			{1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0},
-			{0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //5
+			{0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 			{0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0}, //7
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
 			{0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
-			{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0}, //9
+			{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0},
 			{0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0},
 			{0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1},
-			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0}, //12
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0},
 			{0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0},
 			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0},
 			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0}};
-
 	*/
