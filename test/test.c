@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -10,12 +11,12 @@
 #include "printMaze.h"
 
 #define LIMIT 50
-#define WALLLIMIT 5
+#define WALLLIMIT 4
 #define CORRECTSPEED 6
 #define TURNINGSPEED 2
 #define USOFFEST 8
 
-int MIDDLEDIST = 22;
+int MIDDLEDIST = 30;
 int SENSOR_OFFSETLEFT = 1;
 int SENSOR_OFFSETRIGHT = 1;
 int MINIMUM_DISTANCE = 150;
@@ -30,7 +31,7 @@ void initialisePoints(Point *points[16])
 	{
 		initialisePoint(points[i]);
 		points[i]->x = (i % 4) * 600;
-		points[i]->y = (i / 4) * 600 + 400;
+		points[i]->y = (i / 4) * 600 + 300;
 		points[i]->address = i;
 	}
 }
@@ -454,12 +455,16 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 		|| ((leftAddress < 0 || leftAddress > 15) && leftAddress != -4)) && closestWall())
 		{
 			printf("USING LEFT SENSORS\n");
-			for (i = 0; i<10;i++)
+			for (i = 0; i<20;i++)
 			{
 				front += get_front_ir_dist(0);
 				side += get_side_ir_dist(0);
 			}
+<<<<<<< Updated upstream
 			average = (front + side)/20;             //why 20??
+=======
+			average = (front + side)/40;
+>>>>>>> Stashed changes
 			updateCoordinates(mapping, true, average, orientation, address);
 		}
 
@@ -467,12 +472,12 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 		|| ((rightAddress < 0 || rightAddress > 15) && rightAddress != -4))
 		{	
 			printf("USING RIGHT SENSORS\n");
-			for (i = 0; i<10;i++)
+			for (i = 0; i<20;i++)
 			{
 				front += get_front_ir_dist(1);
 				side += get_side_ir_dist(1);
 			}
-			average = (front + side)/20;
+			average = (front + side)/40;
 			updateCoordinates(mapping, false, average, orientation, address);
 		}
 		else 
@@ -529,6 +534,7 @@ void takingMeasurements(int checkedWalls[3])
 		get_front_ir_dists(&frontleft, &frontright);
 		get_side_ir_dists(&sideleft, &sideright);
 		usfront = get_us_dist();
+	printf("%i\n", usfront);
 
 		if(frontleft > 30 && sideleft > 30)
 			checkedWalls[0]++;
@@ -763,6 +769,26 @@ void crossIRSensors()
 	set_ir_angle(1, 45);
 }
 
+<<<<<<< Updated upstream
+=======
+void initialCalibration(Mapping *mapping)
+{
+	turn(mapping, 'L', 180, 50);
+	int y = get_us_dist();
+	if (y>40)
+	usleep(100000);
+	printf("Measured y value = %i\n",(y+USOFFEST)*10);
+	mapping->y = (y + USOFFEST)*10-600;
+	turn(mapping, 'R', 90, 50);
+	int x = get_us_dist();
+	usleep(100000);
+	printf("Measured x value = %i\n",(x+USOFFEST)*10);
+	mapping->x = (x + USOFFEST)*10-300;
+	turn(mapping, 'R', 90, 50);
+	printf("Initial x:%f\tInitial y:%f\n", mapping->x, mapping->y);
+}
+
+>>>>>>> Stashed changes
 int main() 
 {
 	connect_to_robot();
