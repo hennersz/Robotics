@@ -1,3 +1,8 @@
+//Things to look at:
+// - Initialise calibration! (Check comments)
+// - updateCoordinates (Should we use sensor offset)
+// - CorrectPosition (Shouldn't we take in consideration the USOFFSET?)
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,22 +10,23 @@
 #include <math.h>
 #include <unistd.h>
 #include <time.h>
-#include "dijkstra.h"
+//#include "dijkstra.h"
 #include "picomms.h"
-#include "turning.h"
+//#include "turning.h"
 #include "printMaze.h"
+#include "phase2.h"
 
 #define LIMIT 50
-#define WALLLIMIT 4
+#define WALLLIMIT 5  //For lily: 4
 #define CORRECTSPEED 6
 #define TURNINGSPEED 2
 #define USOFFEST 8
 
-int MIDDLEDIST = 30;
+int MIDDLEDIST = 22;  //Lily: 30   //This is used by US in correctPosition
 int SENSOR_OFFSETLEFT = 1;
 int SENSOR_OFFSETRIGHT = 1;
-int MINIMUM_DISTANCE = 150;
-int MINDIST2 = 50;
+int MINIMUM_DISTANCE = 150;  //for preparePoint, which will stop 150 mm before target
+int MINDIST2 = 50;           //for scanfForWalls, which will stop 50 mm before target
 
 //Initialising
 //-----------------------------------------------------------------
@@ -31,7 +37,7 @@ void initialisePoints(Point *points[16])
 	{
 		initialisePoint(points[i]);
 		points[i]->x = (i % 4) * 600;
-		points[i]->y = (i / 4) * 600 + 300;
+		points[i]->y = (i / 4) * 600 + 400; //300?
 		points[i]->address = i;
 	}
 }
@@ -83,10 +89,12 @@ void initialCalibration(Mapping *mapping)
 	usleep(100000);
 	printf("Measured y value = %i\n",(y+USOFFEST)*10);
 	mapping->y = (y + USOFFEST)*10-450;
+	//mapping->y = (y+USOFFEST)*10 + HEIGHT/2 - 600;
 	turn(mapping, 'R', 90, 50);
 	int x = get_us_dist();
 	usleep(100000);
 	printf("Measured x value = %i\n",(x+USOFFEST)*10);
+	//mapping->x = (x+USOFFEST)*10 + HEIGHT/2 - 300;
 	mapping->x = (x + USOFFEST)*10-300;
 	turn(mapping, 'R', 90, 50);
 	printf("Initial x:%f\tInitial y:%f\n", mapping->x, mapping->y);
@@ -94,6 +102,16 @@ void initialCalibration(Mapping *mapping)
 
 void initialise(Mapping *mapping, List *list, bool walls[16][16], Point *points[16])
 {
+	connect_to_robot();
+	initialize_robot();
+	set_origin();
+
+	int i;
+	for(i = 0; i < 16; i++) 
+	{
+		points[i] = (Point*)malloc(sizeof(Point));
+	}
+
 	initialiseIR();
 	initialiseList(list);
 	initialiseWalls(walls);
@@ -264,7 +282,7 @@ void scanForWalls(Mapping *mapping, Point *targetPoint, int speed, bool walls[16
 }
 
 //-----------------------------------------------------------------
-//TO DO
+//
 
 void checkTurn(Mapping *mapping, int orientation, bool turnedRight)
 {
@@ -460,11 +478,7 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 				front += get_front_ir_dist(0);
 				side += get_side_ir_dist(0);
 			}
-<<<<<<< Updated upstream
-			average = (front + side)/20;             //why 20??
-=======
-			average = (front + side)/40;
->>>>>>> Stashed changes
+			average = (front + side)/40;             //40 measurements in total
 			updateCoordinates(mapping, true, average, orientation, address);
 		}
 
@@ -534,7 +548,7 @@ void takingMeasurements(int checkedWalls[3])
 		get_front_ir_dists(&frontleft, &frontright);
 		get_side_ir_dists(&sideleft, &sideright);
 		usfront = get_us_dist();
-	printf("%i\n", usfront);
+		//printf("%i\n", usfront);
 
 		if(frontleft > 30 && sideleft > 30)
 			checkedWalls[0]++;
@@ -750,10 +764,11 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 
 void followList(Mapping *mapping, List *list, int speed)
 {
+	printf("Speed = %i\n", speed);
 	Point *currentNode = list->last;
 	while(currentNode->parent != NULL)
 	{
-		preparePoint(mapping, currentNode, speed, 0);
+		preparePointPhase2(mapping, currentNode, speed, 0);
 		currentNode = currentNode->parent;
 	}
 	printf("Exit: currentNode->address = %i\n", currentNode->child->address);
@@ -769,39 +784,10 @@ void crossIRSensors()
 	set_ir_angle(1, 45);
 }
 
-<<<<<<< Updated upstream
-=======
-void initialCalibration(Mapping *mapping)
-{
-	turn(mapping, 'L', 180, 50);
-	int y = get_us_dist();
-	if (y>40)
-	usleep(100000);
-	printf("Measured y value = %i\n",(y+USOFFEST)*10);
-	mapping->y = (y + USOFFEST)*10-600;
-	turn(mapping, 'R', 90, 50);
-	int x = get_us_dist();
-	usleep(100000);
-	printf("Measured x value = %i\n",(x+USOFFEST)*10);
-	mapping->x = (x + USOFFEST)*10-300;
-	turn(mapping, 'R', 90, 50);
-	printf("Initial x:%f\tInitial y:%f\n", mapping->x, mapping->y);
-}
-
->>>>>>> Stashed changes
 int main() 
 {
-	connect_to_robot();
-	initialize_robot();
-	set_origin();
 
 	Point *points[16];
-	int i;
-	for(i = 0; i < 16; i++) 
-	{
-		points[i] = (Point*)malloc(sizeof(Point));
-	}
-
 	bool walls[16][16];
 	int orientation = 0;
 	Mapping *mapping = malloc(sizeof(Mapping));
@@ -826,7 +812,8 @@ int main()
 	MINIMUM_DISTANCE = 380;
 	MINDIST2 = 50;
 	initialCalibration(mapping);
-	followList(mapping, list, 50);
+	//NEVER GO BELOW 15 for followList!
+	followList(mapping, list, 100);
 
 	return 0;
 }

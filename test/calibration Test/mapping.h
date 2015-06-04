@@ -1,4 +1,4 @@
-#define WIDTH 225     //Not sure if these are lily's but I think they are : 233 and 95
+#define WIDTH 225
 #define WHEELDIAM 95
 
 typedef struct Mapping 
