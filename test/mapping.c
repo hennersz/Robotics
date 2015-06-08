@@ -5,8 +5,8 @@
 #include <math.h>
 #include "picomms.h"
 #include "linkedList.h"
-#include "mapping.h"
-
+#include "turning.h"
+#include "test.h"
 
 double ratio;
 
@@ -149,10 +149,10 @@ int checkOrientation(Mapping *mapping)
 
 int addressToX(int address)
 {
-	return (address%4) * 600;
+	return (address%4) * 600 + XOFFSET;
 }
 
 int addressToY(int address)
 {
-	return (address/4) * 600 + 400;
+	return (address/4) * 600 + 300 + YOFFSET;
 }

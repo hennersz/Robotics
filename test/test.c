@@ -9,9 +9,7 @@
 #include <math.h>
 #include <unistd.h>
 #include <time.h>
-//#include "dijkstra.h"
 #include "picomms.h"
-//#include "turning.h"
 #include "printMaze.h"
 #include "phase2.h"
 
@@ -19,9 +17,12 @@
 #define WALLLIMIT 5  //For lily: 4
 #define CORRECTSPEED 6
 #define TURNINGSPEED 2
-#define USOFFEST 0   //8
+#define USOFFEST 8  //8
+#define HEIGHT 26
 
-int MIDDLEDIST = 22;  //Lily: 30   //This is used by US in correctPosition
+int XOFFSET = 0;		     //Used to determine XOFFSET in initialCalibration
+int YOFFSET = 0;             //Used to determine YOFFSET in initialCalibration
+int MIDDLEDIST = 14;  //Lily: 30   //This is used by US in correctPosition
 int SENSOR_OFFSETLEFT = 1;
 int SENSOR_OFFSETRIGHT = 1;
 int MINIMUM_DISTANCE = 150;  //for preparePoint, which will stop 150 mm before target
@@ -37,37 +38,10 @@ void initialisePoints(Point *points[16])
 	for(i = 0; i < 16; i++)
 	{
 		initialisePoint(points[i]);
-		points[i]->x = (i % 4) * 600;
-		points[i]->y = (i / 4) * 600 + 400; //300?
+		points[i]->x = (i % 4) * 600 + XOFFSET;
+		points[i]->y = (i / 4) * 600 + 300 + YOFFSET; //300?
 		points[i]->address = i;
 	}
-}
-
-void initialiseSensorOffset()
-{
-	//calculates the difference in distance between the front and side IR sensors
-	// when both face the same direction
-	int sideLeft, sideRight;
-	int frontLeft, frontRight;
-	double leftTotal = 0, rightTotal = 0;
-	int i;
-	//gets an average over 10 values incase of misreads
-	for(i = 0; i < 10; i++)
-	{
-		get_side_ir_dists(&sideLeft, &sideRight);
-		get_front_ir_dists(&frontLeft, &frontRight);
-		leftTotal += (frontLeft - sideLeft);
-		rightTotal += (frontRight - sideRight);
-	}
-
-	SENSOR_OFFSETLEFT = round(leftTotal / 10);
-	SENSOR_OFFSETRIGHT = round(rightTotal / 10);
-	//upper limit
-	if(SENSOR_OFFSETRIGHT > 5)
-		SENSOR_OFFSETRIGHT = 5;
-	if(SENSOR_OFFSETLEFT > 5)
-		SENSOR_OFFSETLEFT = 5;
-	printf("SENSOR_OFFSETLEFT = %i\tSENSOR_OFFSETRIGHT = %i\n", SENSOR_OFFSETLEFT, SENSOR_OFFSETRIGHT);
 }
 
 void initialiseWalls(bool walls[16][16])
@@ -94,16 +68,19 @@ void initialCalibration(Mapping *mapping)
 
 	int y = get_us_dist();
 	usleep(100000);
-	printf("Measured y value = %i\n",(y+USOFFEST)*10);
-	mapping->y = (y + USOFFEST)*10-450;
+	YOFFSET = (600 - (HEIGHT/2 + USOFFEST + y)*10) + (HEIGHT * 5);
+	printf("Measured YOFFSET value = %i\n",YOFFSET);
+	//mapping->y = (y + USOFFEST)*10-450;
 	//mapping->y = (y+USOFFEST)*10 + HEIGHT/2 - 600;
 	turn(mapping, 'R', 90, 50);
 
 	int x = get_us_dist();
 	usleep(100000);
-	printf("Measured x value = %i\n",(x+USOFFEST)*10);
+	XOFFSET = (300 - (USOFFEST + x)*10);
+	printf("US x measurement = %i\n", x);
+	printf("Measured XOFFSET value = %i\n",XOFFSET);
 	//mapping->x = (x+USOFFEST)*10 + HEIGHT/2 - 300;
-	mapping->x = (x + USOFFEST)*10-220;
+	//mapping->x = (x + USOFFEST)*10-300;
 
 	turn(mapping, 'R', 90, 50);
 	printf("Initial x:%f\tInitial y:%f\n", mapping->x, mapping->y);
@@ -127,10 +104,9 @@ void initialise(Mapping *mapping, List *list, bool walls[16][16], Point *points[
 	initialiseIR();
 	initialiseList(list);
 	initialiseWalls(walls);
-	initialisePoints(points);
-	//initialiseSensorOffset();              not reliable for real robot
 	initialiseMapping(mapping);
 	initialCalibration(mapping);
+	initialisePoints(points);
 }
 
 //end of initialising
@@ -383,6 +359,8 @@ void updateCoordinates(Mapping *mapping, bool left, double average, int orientat
 			difference = (300.0 - (double)(WIDTH/2)) - average;
 		else	
 			difference = average - (300.0 - (double)(WIDTH/2));
+		printf("Difference BEFORE = %f\n", difference);
+		difference = difference - (HEIGHT/2)*10;
 		mapping->x = addressToX(address) + difference;
 		mapping->y = addressToY(address);
 	}
@@ -392,6 +370,7 @@ void updateCoordinates(Mapping *mapping, bool left, double average, int orientat
 			difference = (300.0 - (double)(WIDTH/2)) - average;
 		else 
 			difference = average - (300.0 - (double)(WIDTH/2));
+		difference = difference - (HEIGHT/2)*10;
 		mapping->y = addressToY(address) + difference;	
 		mapping->x = addressToX(address);
 	}
@@ -401,6 +380,7 @@ void updateCoordinates(Mapping *mapping, bool left, double average, int orientat
 			difference = average - (300.0 - (double)(WIDTH/2));
 		else	
 			difference = (300.0 - (double)(WIDTH/2)) - average;
+		difference = difference - (HEIGHT/2)*10;
 		mapping->x = addressToX(address) + difference;
 		mapping->y = addressToY(address);
 	}
@@ -411,6 +391,7 @@ void updateCoordinates(Mapping *mapping, bool left, double average, int orientat
 		else 
 			difference = (300.0 - (double)(WIDTH/2)) - average;
 		//printf("ADDRESS = %i\n", address);
+		difference = difference - (HEIGHT/2)*10;
 		mapping->y = addressToY(address) + difference;	
 		mapping->x = addressToX(address);
 	}
