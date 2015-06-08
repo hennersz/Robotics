@@ -25,6 +25,8 @@ int MINDIST2 = 50;
 //-----------------------------------------------------------------
 void initialisePoints(Point *points[16])
 {
+	//generates co-ordiates for every square in the maze, assumes robot starts
+	// centrally on x axis but offcentre on y axis
 	int i;
 	for(i = 0; i < 16; i++)
 	{
@@ -37,10 +39,13 @@ void initialisePoints(Point *points[16])
 
 void initialiseSensorOffset()
 {
+	//calculates the difference in distance between the front and side IR sensors
+	// when both face the same direction
 	int sideLeft, sideRight;
 	int frontLeft, frontRight;
-	int leftTotal = 0, rightTotal = 0;
+	double leftTotal = 0, rightTotal = 0;
 	int i;
+	//gets an average over 10 values incase of misreads
 	for(i = 0; i < 10; i++)
 	{
 		get_side_ir_dists(&sideLeft, &sideRight);
@@ -49,8 +54,9 @@ void initialiseSensorOffset()
 		rightTotal += (frontRight - sideRight);
 	}
 
-	SENSOR_OFFSETLEFT = round((double)leftTotal / 20);
-	SENSOR_OFFSETRIGHT = round((double)rightTotal / 20);
+	SENSOR_OFFSETLEFT = round(leftTotal / 10);
+	SENSOR_OFFSETRIGHT = round(rightTotal / 10);
+	//upper limit
 	if(SENSOR_OFFSETRIGHT > 5)
 		SENSOR_OFFSETRIGHT = 5;
 	if(SENSOR_OFFSETLEFT > 5)
@@ -60,6 +66,7 @@ void initialiseSensorOffset()
 
 void initialiseWalls(bool walls[16][16])
 {
+	//sets every value to false, ie there is a wall there.
 	int i, j;
 	for(i = 0; i < 16; i++)
 	{
@@ -76,17 +83,21 @@ void initialiseIR()
 
 void initialCalibration(Mapping *mapping)
 {
+	//calculates where the robot has been places in the starting square
 	turn(mapping, 'L', 180, 50);
+
 	int y = get_us_dist();
-	if (y>40)
 	usleep(100000);
 	printf("Measured y value = %i\n",(y+USOFFEST)*10);
 	mapping->y = (y + USOFFEST)*10-450;
+
 	turn(mapping, 'R', 90, 50);
+
 	int x = get_us_dist();
 	usleep(100000);
 	printf("Measured x value = %i\n",(x+USOFFEST)*10);
 	mapping->x = (x + USOFFEST)*10-300;
+
 	turn(mapping, 'R', 90, 50);
 	printf("Initial x:%f\tInitial y:%f\n", mapping->x, mapping->y);
 }
@@ -133,16 +144,16 @@ int calculateSpeedOffset(Mapping *mapping, Point *point, int orientation)
 {
 	double targetAngle = findTargetAngle(mapping, point);
 	double robotAngle = mapping->previousAngle;
+
+	//gets robot angle between pi and -pi radians
 	if(robotAngle > M_PI)
-	{
 		robotAngle -= 2*M_PI;
-	}
 	else if (robotAngle < -M_PI) 
-	{
 		robotAngle +=2*M_PI;
-	}
+
 	double angleDifference = robotAngle - targetAngle;
 	
+	//gets difference between pi and -pi radians
 	if(angleDifference > M_PI)
 		angleDifference -= 2*M_PI;
 	else if(angleDifference < -M_PI)
@@ -161,10 +172,11 @@ void goTo(Mapping *mapping, Point *point, int speed, int orientation)
 {
 	distanceTravelled(mapping);
 	double speedOffset = (double)calculateSpeedOffset(mapping, point, orientation);
+	//makes it so wheels only gain speed for smoother turning
 	if(speedOffset > 0)
-		set_motors(speed, speed + (int)speedOffset);
+		set_motors(speed, speed + (int)speedOffset);//speeds up right wheel
 	else
-		set_motors(speed - (int)speedOffset, speed);
+		set_motors(speed - (int)speedOffset, speed);//speeds up left wheel
 }
 
 void findNextPoint(Mapping *mapping, Point *point, Point *targetPoint)
@@ -202,9 +214,12 @@ void preparePoint(Mapping *mapping, Point *targetPoint, int speed, int orientati
 
 void updateWalls(Mapping *mapping, int checkedWalls[3], bool walls[16][16], int address, int orientation)
 {
+	//this updates the walls around the robot, first checking the square in
+	//question is not outside the grid then updating it based on measurements
 	int additionArray[4] = {-1, 4, 1, -4};
 	printf("WALLS LEFT: %i\t WALLS STRAIGHT: %i\t WALLS RIGHT: %i\n", checkedWalls[0], checkedWalls[1], checkedWalls[2]);
 
+	//updates wall to the left of the robot
 	if(address + additionArray[orientation%4] > 0 
 		&& address + additionArray[orientation%4] < 16)
 	{
@@ -219,6 +234,8 @@ void updateWalls(Mapping *mapping, int checkedWalls[3], bool walls[16][16], int 
 			walls[address + additionArray[orientation%4]][address] = false;
 		}
 	}
+
+	// updates the wall in front of the robot
 	if(address + additionArray[(orientation + 1)%4] > 0
 		&& address + additionArray[(orientation + 1)%4] < 16)
 	{
@@ -233,6 +250,8 @@ void updateWalls(Mapping *mapping, int checkedWalls[3], bool walls[16][16], int 
 			walls[address + additionArray[(orientation + 1)%4]][address] = false;	
 		}
 	}
+
+	//updates the wall to the right of the robot
 	if(address + additionArray[(orientation + 2)%4] > 0
 		&& address + additionArray[(orientation + 2)%4] < 16)
 	{
@@ -263,7 +282,6 @@ void scanForWalls(Mapping *mapping, Point *targetPoint, int speed, bool walls[16
 }
 
 //-----------------------------------------------------------------
-//TO DO
 
 void checkTurn(Mapping *mapping, int orientation, bool turnedRight)
 {
@@ -276,16 +294,18 @@ void checkTurn(Mapping *mapping, int orientation, bool turnedRight)
 	else if(orientation == 2)
 		targetAngle = M_PI;
 	else
-		targetAngle = (3.0/2.0) * M_PI;
+		targetAngle = 1.5 * M_PI;
 	do
 	{
 		distanceTravelled(mapping);
+
 		if(mapping->previousAngle < 0)
 			currentAngle = mapping->previousAngle + 2*M_PI;
 		else if(mapping->previousAngle > 2*M_PI)
 			currentAngle = mapping->previousAngle - 2*M_PI;
 		else
 			currentAngle = mapping->previousAngle;
+
 		if(currentAngle > targetAngle)
 			set_motors(TURNINGSPEED, -TURNINGSPEED);
 		else
@@ -354,6 +374,7 @@ void checkTurn2(Mapping *mapping, bool turnedRight)
 
 void correctPosition(Mapping *mapping)
 {
+	//puts robot in middle of square but only for 1 axis!!
 	printf("correctPosition\n");
 	int distance;
 	do {
@@ -369,11 +390,12 @@ void correctPosition(Mapping *mapping)
 }	
 
 
-//The width of the robot does not equal to the height!!
+//The width of the robot is not equal to the height!!
 void updateCoordinates(Mapping *mapping, bool left, double average, int orientation, int address)
 {
 	average *= 10; //convert to mm
 	double difference;
+	//0 = north, 1 = east, 2 = south, 3 = west
 	if(orientation == 0)
 	{
 		if(left)
@@ -459,7 +481,7 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 				front += get_front_ir_dist(0);
 				side += get_side_ir_dist(0);
 			}
-			average = (front + side)/20;             //why 20??
+			average = (front + side)/20;             //why 20?? -> because we sum the 10 front and 10 side values
 			updateCoordinates(mapping, true, average, orientation, address);
 		}
 
@@ -494,7 +516,7 @@ void turning(Mapping *mapping, int orientation, int targetOrientation, bool wall
 	{
 		turn(mapping, 'L', 90, 50);
 		usleep(20);
-		if(frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])
+		if(frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])// can we make these into one if statement?
 			checkTurn(mapping, targetOrientation, false);
 		else if((frontAddress < 0 || frontAddress > 15) && frontAddress != -4)
 			checkTurn(mapping, targetOrientation, false);
