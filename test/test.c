@@ -38,7 +38,7 @@ void initialisePoints(Point *points[16])
 	{
 		initialisePoint(points[i]);
 		points[i]->x = (i % 4) * 600;
-		points[i]->y = (i / 4) * 600 + 400; //300?
+		points[i]->y = (i / 4) * 600 + 300; //300?
 		points[i]->address = i;
 	}
 }
@@ -95,15 +95,15 @@ void initialCalibration(Mapping *mapping)
 	int y = get_us_dist();
 	usleep(100000);
 	printf("Measured y value = %i\n",(y+USOFFEST)*10);
-	mapping->y = (y + USOFFEST)*10-450;
-	//mapping->y = (y+USOFFEST)*10 + HEIGHT/2 - 600;
+	//mapping->y = (y + USOFFEST)*10-450;
+	mapping->y = (y+USOFFEST)*10 + HEIGHT/2 - 600;
 	turn(mapping, 'R', 90, 50);
 
 	int x = get_us_dist();
 	usleep(100000);
 	printf("Measured x value = %i\n",(x+USOFFEST)*10);
-	//mapping->x = (x+USOFFEST)*10 + HEIGHT/2 - 300;
-	mapping->x = (x + USOFFEST)*10-300;
+	mapping->x = (x+USOFFEST)*10 + HEIGHT/2 - 300;
+	//mapping->x = (x + USOFFEST)*10-300;
 
 	turn(mapping, 'R', 90, 50);
 	printf("Initial x:%f\tInitial y:%f\n", mapping->x, mapping->y);
@@ -396,7 +396,7 @@ void correctPosition(Mapping *mapping)
 	printf("correctPosition\n");
 	int distance;
 	do {
-		distance  = get_us_dist();
+		distance  = get_us_dist()-USOFFEST;
 		distanceTravelled(mapping);
 		if(distance > MIDDLEDIST)
 			set_motors(CORRECTSPEED, CORRECTSPEED);
@@ -499,7 +499,7 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 				front += get_front_ir_dist(0);
 				side += get_side_ir_dist(0);
 			}
-			average = (front + side)/20;             //take 40 for lily
+			average = (front + side)/20 - 20;//-20 accounts for distance between sensor and edge of robot             //take 40 for lily
 			updateCoordinates(mapping, true, average, orientation, address);
 		}
 
@@ -512,7 +512,7 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 				front += get_front_ir_dist(1);
 				side += get_side_ir_dist(1);
 			}
-			average = (front + side)/20;
+			average = (front + side)/20 -20;
 			updateCoordinates(mapping, false, average, orientation, address);
 		}
 		else 
