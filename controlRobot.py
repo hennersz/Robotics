@@ -16,6 +16,10 @@ DOWN = 1
 RIGHT = 2
 LEFT = 3
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/master
 TCP_IP = '128.16.79.6'
 TCP_PORT = 55443
 BUFFER_SIZE = 1024
