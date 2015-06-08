@@ -663,10 +663,10 @@ bool visitedEverything(Point *points[16])
 	int i;
 	for(i = 0; i < 16; i++)
 	{
-		if(i == 6)
-		{
-			i = 7;
-		}
+		//if(i == 6)
+		//{
+		//	i = 7;
+		//}
 		if(!points[i]->visited)
 			return false;
 	}
@@ -772,7 +772,8 @@ void followList(Mapping *mapping, List *list, int speed)
 		currentNode = currentNode->parent;
 	}
 	printf("Exit: currentNode->address = %i\n", currentNode->child->address);
-	scanForEnd(mapping, currentNode->child, speed);
+	scanForEnd(mapping, currentNode->child, speed); 
+	set_motors(0, 0); 
 }
 
 void crossIRSensors()
@@ -810,11 +811,18 @@ int main()
 	initialiseList(list);
 	dijkstra(walls, list, points, 0, 15);
 	MINIMUM_DISTANCE = 380;
-	MINDIST2 = 50;
+	MINDIST2 = 200;
 	initialCalibration(mapping);
+
+	clock_t begin, end;
+	double time_spent; 
+	begin = clock();
 	//NEVER GO BELOW 15 for followList!
 	followList(mapping, list, 100);
-
+	
+	end = clock();
+	time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+	printf("Time taken: %f\n", time_spent);
 	return 0;
 }
 
