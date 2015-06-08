@@ -359,8 +359,6 @@ void updateCoordinates(Mapping *mapping, bool left, double average, int orientat
 			difference = (300.0 - (double)(WIDTH/2)) - average;
 		else	
 			difference = average - (300.0 - (double)(WIDTH/2));
-		printf("Difference BEFORE = %f\n", difference);
-		difference = difference - (HEIGHT/2)*10;
 		mapping->x = addressToX(address) + difference;
 		mapping->y = addressToY(address);
 	}
@@ -370,7 +368,6 @@ void updateCoordinates(Mapping *mapping, bool left, double average, int orientat
 			difference = (300.0 - (double)(WIDTH/2)) - average;
 		else 
 			difference = average - (300.0 - (double)(WIDTH/2));
-		difference = difference - (HEIGHT/2)*10;
 		mapping->y = addressToY(address) + difference;	
 		mapping->x = addressToX(address);
 	}
@@ -380,7 +377,7 @@ void updateCoordinates(Mapping *mapping, bool left, double average, int orientat
 			difference = average - (300.0 - (double)(WIDTH/2));
 		else	
 			difference = (300.0 - (double)(WIDTH/2)) - average;
-		difference = difference - (HEIGHT/2)*10;
+		//difference = difference - (HEIGHT/2)*10;
 		mapping->x = addressToX(address) + difference;
 		mapping->y = addressToY(address);
 	}
@@ -390,8 +387,7 @@ void updateCoordinates(Mapping *mapping, bool left, double average, int orientat
 			difference = average - (300.0 - (double)(WIDTH/2));
 		else 
 			difference = (300.0 - (double)(WIDTH/2)) - average;
-		//printf("ADDRESS = %i\n", address);
-		difference = difference - (HEIGHT/2)*10;
+		printf("ADDRESS = %i\n", address);
 		mapping->y = addressToY(address) + difference;	
 		mapping->x = addressToX(address);
 	}
@@ -444,7 +440,7 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 				front += get_front_ir_dist(0);
 				side += get_side_ir_dist(0);
 			}
-			average = (front + side)/20 - 20;//-20 accounts for distance between sensor and edge of robot             //take 40 for lily
+			average = (front + side)/20;//this is in centimeters //take 40 for lily
 			updateCoordinates(mapping, true, average, orientation, address);
 		}
 
@@ -457,7 +453,7 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 				front += get_front_ir_dist(1);
 				side += get_side_ir_dist(1);
 			}
-			average = (front + side)/20 -20;
+			average = (front + side)/20;//this is in centimeters
 			updateCoordinates(mapping, false, average, orientation, address);
 		}
 		else 
