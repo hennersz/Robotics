@@ -5,7 +5,7 @@
 
 int send_msg(char* msg, int len);
 void initialize_robot();
-int connect_to_robot();
+int connect_to_robot(int number);
 const char* recv_msg(char *buf, int bufsize);
 void clear_input_stream();
 int gp2d12_to_dist(int ir);

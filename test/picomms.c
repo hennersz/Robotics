@@ -14,6 +14,7 @@ int ir_angle[2] = {0,0};
 static int sock = -1;
 int error_state = 0;
 #define READBUFLEN 80
+int number1 = 0;
 
 void re_initialize_robot();
 void check_errors();
@@ -23,7 +24,7 @@ int send_msg(char* msg, int len) {
     /* the write failed - likely the robot was switched off - attempt
        to reconnect and reinitialize */
     printf("send failed - reconnecting\n");
-    connect_to_robot();
+    connect_to_robot(number1);
     re_initialize_robot();
     return 0;
   } else {
@@ -130,7 +131,7 @@ const char* recv_msg(char *buf, int bufsize) {
       return 0;
     }
     if (FD_ISSET(sock, &except_fdset)) {
-      connect_to_robot();
+      connect_to_robot(number1);
       re_initialize_robot();
       return 0;
     }
@@ -141,7 +142,7 @@ const char* recv_msg(char *buf, int bufsize) {
     } else {
       /* the write failed - likely the robot was switched off - attempt
 	 to reconnect and reinitialize */
-      connect_to_robot();
+      connect_to_robot(number1);
       re_initialize_robot();
       buf[0]='\0';
       return 0;
@@ -512,7 +513,8 @@ void set_asr(int flag) {
   }
 }
 
-int connect_to_robot() {
+int connect_to_robot(int number) {
+  number1 = number;
   int volts;
   printf("connecting...");
   struct sockaddr_in s_addr;
@@ -526,9 +528,65 @@ int connect_to_robot() {
     exit(1);
   }
 
+  char inetAddr[13];
+
+  if(number == 0) {
+    strcpy(inetAddr, "127.0.0.1");
+  }
+  else if(number == 1) {
+    strcpy(inetAddr, "128.16.79.1");
+  }
+  else if(number == 2) {
+    strcpy(inetAddr, "128.16.79.2");
+  }
+  else if(number == 3) {
+    strcpy(inetAddr, "128.16.79.3");
+  }
+  else if(number == 4) {
+    strcpy(inetAddr, "128.16.79.4");
+  }
+  else if(number == 5) {
+    strcpy(inetAddr, "128.16.79.5");
+  }
+  else if(number == 6) {
+    strcpy(inetAddr, "128.16.79.6");
+  }
+  else if(number == 7) {
+    strcpy(inetAddr, "128.16.79.7");
+  }
+  else if(number == 8) {
+    strcpy(inetAddr, "128.16.79.8");
+  }
+  else if(number == 9) {
+    strcpy(inetAddr, "128.16.79.9");
+  }
+  else if(number == 10) {
+    strcpy(inetAddr, "128.16.79.10");
+  }
+  else if(number == 11) {
+    strcpy(inetAddr, "128.16.79.11");
+  }
+  else if(number == 12) {
+    strcpy(inetAddr, "128.16.79.12");
+  }
+  else if(number == 13) {
+    strcpy(inetAddr, "128.16.79.13");
+  }
+  else if(number == 14) {
+    strcpy(inetAddr, "128.16.79.14");
+  }
+  else if(number == 15) {
+    strcpy(inetAddr, "128.16.79.15");
+  }
+  else {
+    strcpy(inetAddr, "128.16.79.16");
+  }
+
   while (1) {
     s_addr.sin_family = AF_INET;
-    s_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    
+
+    s_addr.sin_addr.s_addr = inet_addr(inetAddr);
     s_addr.sin_port = htons(55443);
 
     if (connect(sock, (struct sockaddr *) &s_addr, sizeof(s_addr)) >= 0) {

@@ -16,11 +16,8 @@ DOWN = 1
 RIGHT = 2
 LEFT = 3
 
-<<<<<<< HEAD
-=======
+TCP_IP = '128.16.79.15'
 
->>>>>>> origin/master
-TCP_IP = '128.16.79.6'
 TCP_PORT = 55443
 BUFFER_SIZE = 1024
 
@@ -86,7 +83,7 @@ try:
         #    data = s.recv(BUFFER_SIZE)            
         #    print 'Left Forward', speed        
         elif keyp == '.' or keyp == '>':
-            speed = min(127, speed+10)
+            speed = min(128, speed+10)
             sys.stdout.flush()
             print 'Speed+', speed
         elif keyp == ',' or keyp == '<':

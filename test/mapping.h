@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-#define WIDTH 225
-=======
 #define WIDTH 225     //Not sure if these are lily's but I think they are : 233 and 95
->>>>>>> origin/master
 #define WHEELDIAM 95
 
 typedef struct Mapping 

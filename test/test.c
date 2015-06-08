@@ -19,7 +19,7 @@
 #define WALLLIMIT 5  //For lily: 4
 #define CORRECTSPEED 6
 #define TURNINGSPEED 2
-#define USOFFEST 8
+#define USOFFEST 0   //8
 
 int MIDDLEDIST = 22;  //Lily: 30   //This is used by US in correctPosition
 int SENSOR_OFFSETLEFT = 1;
@@ -38,7 +38,7 @@ void initialisePoints(Point *points[16])
 	{
 		initialisePoint(points[i]);
 		points[i]->x = (i % 4) * 600;
-		points[i]->y = (i / 4) * 600 + 300; //300?
+		points[i]->y = (i / 4) * 600 + 400; //300?
 		points[i]->address = i;
 	}
 }
@@ -95,15 +95,15 @@ void initialCalibration(Mapping *mapping)
 	int y = get_us_dist();
 	usleep(100000);
 	printf("Measured y value = %i\n",(y+USOFFEST)*10);
-	//mapping->y = (y + USOFFEST)*10-450;
-	mapping->y = (y+USOFFEST)*10 + HEIGHT/2 - 600;
+	mapping->y = (y + USOFFEST)*10-450;
+	//mapping->y = (y+USOFFEST)*10 + HEIGHT/2 - 600;
 	turn(mapping, 'R', 90, 50);
 
 	int x = get_us_dist();
 	usleep(100000);
 	printf("Measured x value = %i\n",(x+USOFFEST)*10);
-	mapping->x = (x+USOFFEST)*10 + HEIGHT/2 - 300;
-	//mapping->x = (x + USOFFEST)*10-300;
+	//mapping->x = (x+USOFFEST)*10 + HEIGHT/2 - 300;
+	mapping->x = (x + USOFFEST)*10-220;
 
 	turn(mapping, 'R', 90, 50);
 	printf("Initial x:%f\tInitial y:%f\n", mapping->x, mapping->y);
@@ -111,7 +111,10 @@ void initialCalibration(Mapping *mapping)
 
 void initialise(Mapping *mapping, List *list, bool walls[16][16], Point *points[16])
 {
-	connect_to_robot();
+	printf("Which robot do you want to connect to? (only final number(s). 0 for local connection)\n");
+	int number;
+	scanf("%i", &number);
+	connect_to_robot(number);
 	initialize_robot();
 	set_origin();
 
@@ -349,47 +352,6 @@ int closestWall()
 		return 0;
 }
 
-//-----------------------------------------------------------------
-
-/*
-void checkTurn2(Mapping *mapping, bool turnedRight)
-{
-	printf("checkTurn\n");
-	int front, side;
-	turnedRight = closestWall();
-
-	if(turnedRight) //left sensor
-	{
-		do
-		{
-			distanceTravelled(mapping);
-			front = get_front_ir_dist(0) - SENSOR_OFFSETLEFT; //front sensor is further from wall
-			side = get_side_ir_dist(0);
-			if(front > side)
-				set_motors(-TURNINGSPEED, TURNINGSPEED);
-			else
-				set_motors(TURNINGSPEED, -TURNINGSPEED);
-
-		}
-		while(abs(front - side) > 1);
-	}
-	else   //right sensor
-	{
-		do
-		{
-			distanceTravelled(mapping);
-			front = get_front_ir_dist(1) - SENSOR_OFFSETRIGHT;
-			side = get_side_ir_dist(1);
-			if(front > side)
-				set_motors(TURNINGSPEED, -TURNINGSPEED);
-			else
-				set_motors(-TURNINGSPEED, TURNINGSPEED);
-		}
-		while(abs(front - side) > 1);
-	}
-}
-*/
-
 void correctPosition(Mapping *mapping)
 {
 	//puts robot in middle of square but only for 1 axis!!
@@ -411,6 +373,7 @@ void correctPosition(Mapping *mapping)
 //The width of the robot is not equal to the height!!
 void updateCoordinates(Mapping *mapping, bool left, double average, int orientation, int address)
 {
+
 	average *= 10; //convert to mm
 	double difference;
 	//0 = north, 1 = east, 2 = south, 3 = west
@@ -451,6 +414,7 @@ void updateCoordinates(Mapping *mapping, bool left, double average, int orientat
 		mapping->y = addressToY(address) + difference;	
 		mapping->x = addressToX(address);
 	}
+	printf("Updated coordinates: x = %f\t y = %f\n", mapping->x, mapping->y);
 }
 
 void findOrientation(int orientation, int address, int *frontAddress, int *leftAddress, int *rightAddress)
