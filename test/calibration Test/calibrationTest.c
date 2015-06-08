@@ -48,6 +48,16 @@ void turnTest(Mapping *mapping, int angle, int speed)
 	turn(mapping, 'L', angle, speed);
 }
 
+void calibrate(Mapping* mapping)
+{
+	turn(mapping, 'L', 180, 50);
+	int y = get_us_dist()*10;
+	turn(mapping, 'L', 90, 50);
+	int x = get_us_dist()*10;
+
+	printf("X:%i, Y:%i\n", x,y);
+}
+
 int main()
 {
 	connect_to_robot();
@@ -63,7 +73,7 @@ int main()
 
 	set_ir_angle(0, -45);
 	set_ir_angle(1, 45);
-	square(mapping);
+	//square(mapping);
 	/*
 	while(1)
 	{
@@ -76,5 +86,7 @@ int main()
 	//oneMeter(mapping);
 	//usleep(10000000);
 	//turnTest(mapping, angle, speed);
+	calibrate(mapping);
+
 	return 0;
 }
