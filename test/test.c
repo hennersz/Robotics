@@ -17,7 +17,7 @@
 #define WALLLIMIT 5  //For lily: 4
 #define CORRECTSPEED 6
 #define TURNINGSPEED 2
-#define USOFFEST 8  //8
+#define USOFFEST 5  //8
 #define HEIGHT 26
 
 int XOFFSET = 0;		     //Used to determine XOFFSET in initialCalibration
@@ -68,7 +68,7 @@ void initialCalibration(Mapping *mapping)
 
 	int y = get_us_dist();
 	usleep(100000);
-	YOFFSET = (600 - (HEIGHT/2 + USOFFEST + y)*10) + (HEIGHT * 5);
+	YOFFSET = (600 - (HEIGHT/2)*10 - (y - USOFFEST)*10);// + (HEIGHT * 5);
 	printf("Measured YOFFSET value = %i\n",YOFFSET);
 	//mapping->y = (y + USOFFEST)*10-450;
 	//mapping->y = (y+USOFFEST)*10 + HEIGHT/2 - 600;
@@ -76,7 +76,7 @@ void initialCalibration(Mapping *mapping)
 
 	int x = get_us_dist();
 	usleep(100000);
-	XOFFSET = (300 - (USOFFEST + x)*10);
+	XOFFSET = (300 - (x - USOFFEST)*10 - (HEIGHT/2)*10);
 	printf("US x measurement = %i\n", x);
 	printf("Measured XOFFSET value = %i\n",XOFFSET);
 	//mapping->x = (x+USOFFEST)*10 + HEIGHT/2 - 300;
@@ -360,7 +360,6 @@ void updateCoordinates(Mapping *mapping, bool left, double average, int orientat
 		else	
 			difference = average - (300.0 - (double)(WIDTH/2));
 		printf("Difference BEFORE = %f\n", difference);
-		difference = difference - (HEIGHT/2)*10;
 		mapping->x = addressToX(address) + difference;
 		mapping->y = addressToY(address);
 	}
@@ -370,7 +369,6 @@ void updateCoordinates(Mapping *mapping, bool left, double average, int orientat
 			difference = (300.0 - (double)(WIDTH/2)) - average;
 		else 
 			difference = average - (300.0 - (double)(WIDTH/2));
-		difference = difference - (HEIGHT/2)*10;
 		mapping->y = addressToY(address) + difference;	
 		mapping->x = addressToX(address);
 	}
@@ -380,7 +378,6 @@ void updateCoordinates(Mapping *mapping, bool left, double average, int orientat
 			difference = average - (300.0 - (double)(WIDTH/2));
 		else	
 			difference = (300.0 - (double)(WIDTH/2)) - average;
-		difference = difference - (HEIGHT/2)*10;
 		mapping->x = addressToX(address) + difference;
 		mapping->y = addressToY(address);
 	}
@@ -390,8 +387,6 @@ void updateCoordinates(Mapping *mapping, bool left, double average, int orientat
 			difference = average - (300.0 - (double)(WIDTH/2));
 		else 
 			difference = (300.0 - (double)(WIDTH/2)) - average;
-		//printf("ADDRESS = %i\n", address);
-		difference = difference - (HEIGHT/2)*10;
 		mapping->y = addressToY(address) + difference;	
 		mapping->x = addressToX(address);
 	}
