@@ -102,7 +102,7 @@ class RobotModel(BaseObj):
 
     def reset_origin1(self, x, y):
         tempx = x * 100.0/26.0
-        tempy = y * 100.0/26.0
+        tempy = -y * 100.0/26.0
         d = sqrt(tempx * tempx + tempy * tempy)
         nx = a2 = atan2(y, x)
         nx = self.origin_x + d * cos (self.origin_angle + a2)
