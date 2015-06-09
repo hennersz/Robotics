@@ -1,7 +1,6 @@
 //Things to look at:
-// - Initialise calibration! (Check comments)
-// - updateCoordinates (Should we use sensor offset)
-// - CorrectPosition (Shouldn't we take in consideration the USOFFSET?)
+//- Add back the - 20 inside correctingCoordinates
+//-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,7 +21,7 @@
 
 int XOFFSET = 0;		     //Used to determine XOFFSET in initialCalibration
 int YOFFSET = 0;             //Used to determine YOFFSET in initialCalibration
-int MIDDLEDIST = 14;  //Lily: 30   //This is used by US in correctPosition
+int MIDDLEDIST = (30 - HEIGHT/2) + USOFFEST;  //Lily: 30   //This is used by US in correctPosition
 int SENSOR_OFFSETLEFT = 1;
 int SENSOR_OFFSETRIGHT = 1;
 int MINIMUM_DISTANCE = 150;  //for preparePoint, which will stop 150 mm before target
@@ -334,7 +333,7 @@ void correctPosition(Mapping *mapping)
 	printf("correctPosition\n");
 	int distance;
 	do {
-		distance  = get_us_dist()-USOFFEST;
+		distance  = get_us_dist();
 		distanceTravelled(mapping);
 		if(distance > MIDDLEDIST)
 			set_motors(CORRECTSPEED, CORRECTSPEED);
@@ -349,7 +348,6 @@ void correctPosition(Mapping *mapping)
 //The width of the robot is not equal to the height!!
 void updateCoordinates(Mapping *mapping, bool left, double average, int orientation, int address)
 {
-
 	average *= 10; //convert to mm
 	double difference;
 	//0 = north, 1 = east, 2 = south, 3 = west
@@ -438,8 +436,13 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 			{
 				front += get_front_ir_dist(0);
 				side += get_side_ir_dist(0);
+				printf("Front = %i\tSide = %i\n", front, side);
 			}
+<<<<<<< Updated upstream
 			average = (front + side)/20;//this is in centimeters //take 40 for lily
+=======
+			average = (front + side)/20;// - 20;//-20 accounts for distance between sensor and edge of robot
+>>>>>>> Stashed changes
 			updateCoordinates(mapping, true, average, orientation, address);
 		}
 
@@ -452,7 +455,11 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 				front += get_front_ir_dist(1);
 				side += get_side_ir_dist(1);
 			}
+<<<<<<< Updated upstream
 			average = (front + side)/20;//this is in centimeters
+=======
+			average = (front + side)/20;// -20;
+>>>>>>> Stashed changes
 			updateCoordinates(mapping, false, average, orientation, address);
 		}
 		else 
