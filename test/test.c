@@ -438,11 +438,8 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 				side += get_side_ir_dist(0);
 				printf("Front = %i\tSide = %i\n", front, side);
 			}
-<<<<<<< Updated upstream
-			average = (front + side)/20;//this is in centimeters //take 40 for lily
-=======
+
 			average = (front + side)/20;// - 20;//-20 accounts for distance between sensor and edge of robot
->>>>>>> Stashed changes
 			updateCoordinates(mapping, true, average, orientation, address);
 		}
 
@@ -455,11 +452,7 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 				front += get_front_ir_dist(1);
 				side += get_side_ir_dist(1);
 			}
-<<<<<<< Updated upstream
-			average = (front + side)/20;//this is in centimeters
-=======
 			average = (front + side)/20;// -20;
->>>>>>> Stashed changes
 			updateCoordinates(mapping, false, average, orientation, address);
 		}
 		else 
