@@ -17,10 +17,10 @@ double distance(Mapping *mapping)
 void oneMeter(Mapping *mapping)
 {
 	int speed, difference;
-	while(mapping->y < 1000)
+	while(mapping->y < 1800)
 	{
 		distanceTravelled(mapping);
-		difference = 1000-distance(mapping);
+		difference = 1800-distance(mapping);
 		if(difference > MAXSPEED)
 		{
 			speed = MAXSPEED;
@@ -60,7 +60,10 @@ void calibrate(Mapping* mapping)
 
 int main()
 {
-	connect_to_robot();
+	//printf("Which robot do you want to connect to? (only final number(s). 0 for local connection)\n");
+	//int number;
+	//scanf("%i", &number);
+	connect_to_robot(15);
 	initialize_robot();
 
 	int speed = 50;
@@ -85,8 +88,8 @@ int main()
 
 	//oneMeter(mapping);
 	//usleep(10000000);
-	//turnTest(mapping, angle, speed);
-	calibrate(mapping);
+	turnTest(mapping, angle, speed);
+	//calibrate(mapping);
 
 	return 0;
 }

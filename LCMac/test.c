@@ -17,7 +17,7 @@
 #define WALLLIMIT 5  //For lily: 4
 #define CORRECTSPEED 6
 #define TURNINGSPEED 2
-#define USOFFEST 5  //8
+#define USOFFEST 6  //8
 #define HEIGHT 26
 
 int XOFFSET = 0;		     //Used to determine XOFFSET in initialCalibration
@@ -25,8 +25,8 @@ int YOFFSET = 0;             //Used to determine YOFFSET in initialCalibration
 int MIDDLEDIST = (30 - HEIGHT/2) + USOFFEST;  //Lily: 30   //This is used by US in correctPosition
 int SENSOR_OFFSETLEFT = 1;
 int SENSOR_OFFSETRIGHT = 1;
-int MINIMUM_DISTANCE = 150;  //for preparePoint, which will stop 150 mm before target
-int MINDIST2 = 50;           //for scanfForWalls, which will stop 50 mm before target
+int MINIMUM_DISTANCE = 200;  //for preparePoint, which will stop 150 mm before target
+int MINDIST2 = 100;           //for scanfForWalls, which will stop 50 mm before target
 
 //Initialising
 //-----------------------------------------------------------------
@@ -68,7 +68,8 @@ void initialCalibration(Mapping *mapping)
 
 	int y = get_us_dist();
 	usleep(100000);
-	YOFFSET = (600 - (HEIGHT/2)*10 - (y - USOFFEST)*10);// + (HEIGHT * 5);
+	YOFFSET = (600 - (HEIGHT/2)*10 - (y - USOFFEST)*10)-150;// + (HEIGHT * 5)
+	printf("US y measurement = %i\n", y);
 	printf("Measured YOFFSET value = %i\n",YOFFSET);
 	//mapping->y = (y + USOFFEST)*10-450;
 	//mapping->y = (y+USOFFEST)*10 + HEIGHT/2 - 600;
@@ -84,15 +85,15 @@ void initialCalibration(Mapping *mapping)
 
 	turn(mapping, 'R', 90, 50);
 	printf("Initial x:%f\tInitial y:%f\n", mapping->x, mapping->y);
-	set_origin2(-XOFFSET, -YOFFSET);
+	set_origin2(-XOFFSET/10, -YOFFSET/10);
 }
 
 void initialise(Mapping *mapping, List *list, bool walls[16][16], Point *points[16])
 {
-	printf("Which robot do you want to connect to? (only final number(s). 0 for local connection)\n");
+	/*printf("Which robot do you want to connect to? (only final number(s). 0 for local connection)\n");
 	int number;
-	scanf("%i", &number);
-	connect_to_robot(number);
+	scanf("%i", &number);*/
+	connect_to_robot(15);
 	initialize_robot();
 	set_origin();
 
@@ -281,6 +282,7 @@ void scanForWalls(Mapping *mapping, Point *targetPoint, int speed, bool walls[16
 	while(!tooClose(targetPoint, mapping, MINDIST2))
 	{
 		goToPoint(mapping, targetPoint, tempPoint, speed, orientation);
+		set_point1(mapping->x/10, mapping->y/10);
 	}
 	targetPoint->visited = true;
 	free(tempPoint);
@@ -291,6 +293,7 @@ void scanForWalls(Mapping *mapping, Point *targetPoint, int speed, bool walls[16
 
 void checkTurn(Mapping *mapping, int orientation, bool turnedRight)
 {
+	
 	printf("checkTurn\n");
 	double targetAngle, currentAngle;
 	if(orientation == 0)
@@ -324,7 +327,8 @@ void checkTurn(Mapping *mapping, int orientation, bool turnedRight)
 		}
 		//printf("angle = %f\tcurrentAngle = %f\targetAngle = %f\n", mapping->previousAngle, currentAngle, targetAngle);
 	}
-	while(fabs(currentAngle - targetAngle) > 0.4);
+	while(fabs(currentAngle - targetAngle) > 0.8);
+	
 }
 
 int closestWall()
@@ -461,7 +465,7 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 				side += get_side_ir_dist(0);
 				printf("Front = %i\tSide = %i\n", front, side);
 			}
-			average = (front + side)/20;// - 20;//-20 accounts for distance between sensor and edge of robot
+			average = (front + side)/20 - 2;// - 20;//-20 accounts for distance between sensor and edge of robot
 			updateCoordinates(mapping, true, average, orientation, address);
 		}
 
@@ -474,7 +478,7 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 				front += get_front_ir_dist(1);
 				side += get_side_ir_dist(1);
 			}
-			average = (front + side)/20;// -20;
+			average = (front + side)/20 - 2;// -20;
 			updateCoordinates(mapping, false, average, orientation, address);
 		}
 		else 
@@ -803,7 +807,7 @@ int main()
 	double time_spent; 
 	begin = clock();
 	//NEVER GO BELOW 15 for followList!
-	followList(mapping, list, 100);
+	followList(mapping, list, 50);
 	
 	end = clock();
 	time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
