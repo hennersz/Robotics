@@ -68,7 +68,7 @@ void initialCalibration(Mapping *mapping)
 
 	int y = get_us_dist();
 	usleep(100000);
-	YOFFSET = (600 - (HEIGHT/2)*10 - (y - USOFFEST)*10)-150;// + (HEIGHT * 5)
+	YOFFSET = (600 - (HEIGHT/2)*10 - (y - USOFFEST)*10);// + (HEIGHT * 5)
 	printf("US y measurement = %i\n", y);
 	printf("Measured YOFFSET value = %i\n",YOFFSET);
 	//mapping->y = (y + USOFFEST)*10-450;
@@ -93,7 +93,7 @@ void initialise(Mapping *mapping, List *list, bool walls[16][16], Point *points[
 	/*printf("Which robot do you want to connect to? (only final number(s). 0 for local connection)\n");
 	int number;
 	scanf("%i", &number);*/
-	connect_to_robot(15);
+	connect_to_robot(9);
 	initialize_robot();
 	set_origin();
 
@@ -285,6 +285,7 @@ void scanForWalls(Mapping *mapping, Point *targetPoint, int speed, bool walls[16
 		set_point1(mapping->x/10, mapping->y/10);
 	}
 	targetPoint->visited = true;
+	set_motors(0, 0);
 	free(tempPoint);
 }
 
@@ -327,8 +328,8 @@ void checkTurn(Mapping *mapping, int orientation, bool turnedRight)
 		}
 		//printf("angle = %f\tcurrentAngle = %f\targetAngle = %f\n", mapping->previousAngle, currentAngle, targetAngle);
 	}
-	while(fabs(currentAngle - targetAngle) > 0.8);
-	
+	while(fabs(currentAngle - targetAngle) > 1);
+	set_motors(0,0);
 }
 
 int closestWall()

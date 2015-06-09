@@ -17,7 +17,7 @@
 #define WALLLIMIT 5  //For lily: 4
 #define CORRECTSPEED 6
 #define TURNINGSPEED 2
-#define USOFFEST 5  //8
+#define USOFFEST 9  //8
 #define HEIGHT 26
 
 int XOFFSET = 0;		     //Used to determine XOFFSET in initialCalibration
@@ -25,8 +25,8 @@ int YOFFSET = 0;             //Used to determine YOFFSET in initialCalibration
 int MIDDLEDIST = (30 - HEIGHT/2) + USOFFEST;  //Lily: 30   //This is used by US in correctPosition
 int SENSOR_OFFSETLEFT = 1;
 int SENSOR_OFFSETRIGHT = 1;
-int MINIMUM_DISTANCE = 150;  //for preparePoint, which will stop 150 mm before target
-int MINDIST2 = 50;           //for scanfForWalls, which will stop 50 mm before target
+int MINIMUM_DISTANCE = 90;  //for preparePoint, which will stop 150 mm before target
+int MINDIST2 = 30;           //for scanfForWalls, which will stop 50 mm before target
 
 //Initialising
 //-----------------------------------------------------------------
@@ -68,7 +68,8 @@ void initialCalibration(Mapping *mapping)
 
 	int y = get_us_dist();
 	usleep(100000);
-	YOFFSET = (600 - (HEIGHT/2)*10 - (y - USOFFEST)*10);// + (HEIGHT * 5);
+	YOFFSET = (600 - (HEIGHT/2)*10 - (y - USOFFEST)*10)+10;// + (HEIGHT * 5)
+	printf("US y measurement = %i\n", y);
 	printf("Measured YOFFSET value = %i\n",YOFFSET);
 	//mapping->y = (y + USOFFEST)*10-450;
 	//mapping->y = (y+USOFFEST)*10 + HEIGHT/2 - 600;
@@ -76,7 +77,7 @@ void initialCalibration(Mapping *mapping)
 
 	int x = get_us_dist();
 	usleep(100000);
-	XOFFSET = (300 - (x - USOFFEST)*10 - (HEIGHT/2)*10);
+	XOFFSET = (300 - (x - USOFFEST)*10 - (HEIGHT/2)*10)+10;
 	printf("US x measurement = %i\n", x);
 	printf("Measured XOFFSET value = %i\n",XOFFSET);
 	//mapping->x = (x+USOFFEST)*10 + HEIGHT/2 - 300;
@@ -84,14 +85,13 @@ void initialCalibration(Mapping *mapping)
 
 	turn(mapping, 'R', 90, 50);
 	printf("Initial x:%f\tInitial y:%f\n", mapping->x, mapping->y);
-	set_origin2(-XOFFSET, -YOFFSET);
 }
 
 void initialise(Mapping *mapping, List *list, bool walls[16][16], Point *points[16])
 {
-	//printf("Which robot do you want to connect to? (only final number(s). 0 for local connection)\n");
-	//int number;
-	//scanf("%i", &number);
+	/*printf("Which robot do you want to connect to? (only final number(s). 0 for local connection)\n");
+	int number;
+	scanf("%i", &number);*/
 	connect_to_robot(0);
 	initialize_robot();
 	set_origin();
@@ -190,8 +190,6 @@ void findNextPoint(Mapping *mapping, Point *point, Point *targetPoint)
 	point->x = mapping->x + (MINIMUM_DISTANCE * cos(angle));
 	point->y = mapping->y + (MINIMUM_DISTANCE * sin(angle));
 
-	set_point(mapping->x/10, mapping->y/10);
-	set_point1(mapping->x/10, mapping->y/10);
 }
 
 void goToPoint(Mapping *mapping, Point *targetPoint, Point *tempPoint, int speed, int orientation)
@@ -204,8 +202,6 @@ void preparePoint(Mapping *mapping, Point *targetPoint, int speed, int orientati
 {
 	Point *tempPoint = malloc(sizeof(Point));
 	initialisePoint(tempPoint);
-	set_point((int)targetPoint->x/10, (int)targetPoint->y/10);
-	set_point1((int)targetPoint->x/10, (int)targetPoint->y/10);
 	printf("targetPoint: x = %f, y = %f\n", targetPoint->x, targetPoint->y);
 
 	while(!tooClose(targetPoint, mapping, MINIMUM_DISTANCE))
@@ -283,6 +279,7 @@ void scanForWalls(Mapping *mapping, Point *targetPoint, int speed, bool walls[16
 		goToPoint(mapping, targetPoint, tempPoint, speed, orientation);
 	}
 	targetPoint->visited = true;
+	set_motors(0, 0);
 	free(tempPoint);
 }
 
@@ -291,6 +288,7 @@ void scanForWalls(Mapping *mapping, Point *targetPoint, int speed, bool walls[16
 
 void checkTurn(Mapping *mapping, int orientation, bool turnedRight)
 {
+	
 	printf("checkTurn\n");
 	double targetAngle, currentAngle;
 	if(orientation == 0)
@@ -324,7 +322,8 @@ void checkTurn(Mapping *mapping, int orientation, bool turnedRight)
 		}
 		//printf("angle = %f\tcurrentAngle = %f\targetAngle = %f\n", mapping->previousAngle, currentAngle, targetAngle);
 	}
-	while(fabs(currentAngle - targetAngle) > 0.4);
+	while(fabs(currentAngle - targetAngle) > 1);
+	set_motors(0,0);
 }
 
 int closestWall()
@@ -461,7 +460,7 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 				side += get_side_ir_dist(0);
 				printf("Front = %i\tSide = %i\n", front, side);
 			}
-			average = (front + side)/20;// - 20;//-20 accounts for distance between sensor and edge of robot
+			average = (front + side)/20 - 2;// - 20;//-20 accounts for distance between sensor and edge of robot
 			updateCoordinates(mapping, true, average, orientation, address);
 		}
 
@@ -474,7 +473,7 @@ void correctingCoordinates(Mapping *mapping, int address, int frontAddress, int 
 				front += get_front_ir_dist(1);
 				side += get_side_ir_dist(1);
 			}
-			average = (front + side)/20;// -20;
+			average = (front + side)/20 - 2;// -20;
 			updateCoordinates(mapping, false, average, orientation, address);
 		}
 		else 
@@ -494,27 +493,38 @@ void turning(Mapping *mapping, int orientation, int targetOrientation, bool wall
 	int difference = targetOrientation - orientation;
 	if(difference == -1 || difference == 3)
 	{
-		turn(mapping, 'L', 90, 50);
+		if((rightAddress > -1 && rightAddress < 16 && !walls[address][rightAddress])
+			 || ((rightAddress > 15 || rightAddress < 0) && rightAddress != -4) )
+		{
+			turn(mapping, 'R', 90, 50);
+			correctPosition(mapping);
+			turn(mapping, 'L', 180, 50);
+		}
+		else
+			turn(mapping, 'L', 90, 50);
 		usleep(20);
-		if(frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])// can we make these into one if statement?
-			checkTurn(mapping, targetOrientation, false);
-		else if((frontAddress < 0 || frontAddress > 15) && frontAddress != -4)
-			checkTurn(mapping, targetOrientation, false);
+		checkTurn(mapping, targetOrientation, false);
 	}
 	else if(difference == 1 || difference == -3)
 	{
-		turn(mapping, 'R', 90, 50);
+		if((leftAddress > -1 && leftAddress < 16 && !walls[address][leftAddress])
+			 || ((leftAddress > 15 || leftAddress < 0) && leftAddress != -4) )
+		{
+			turn(mapping, 'L', 90, 50);
+			correctPosition(mapping);
+			turn(mapping, 'R', 180, 50);
+		}
+		else
+			turn(mapping, 'R', 90, 50);
 		usleep(20);
-		if(frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])
-			checkTurn(mapping, targetOrientation, true);
-		else if((frontAddress < 0 || frontAddress > 15) && frontAddress != -4)
-			checkTurn(mapping, targetOrientation, true);
+		checkTurn(mapping, targetOrientation, true);
 	}
 	else if(difference == 2 || difference == -2)
 	{
-		turn(mapping, 'R', 180, 50);
-		if(frontAddress > -1 && frontAddress < 16 && !walls[address][frontAddress])
-			checkTurn(mapping, targetOrientation, true);
+		turn(mapping, 'R', 90, 50);
+		correctPosition(mapping);
+		turn(mapping, 'R', 90, 50);
+		checkTurn(mapping, targetOrientation, true);
 	}
 }
 
@@ -576,7 +586,9 @@ int decideDirection(Mapping *mapping, Point *points[16], bool walls[16][16], int
 	int additionArray[4] = {-1, 4, 1, -4};
 	if(address == 15)
 	{
-		turn(mapping, 'R', 180, 70);
+		turn(mapping, 'R', 90, 50);
+		correctPosition(mapping);
+		turn(mapping, 'R', 90, 50);
 		checkTurn(mapping, (orientation + 2) % 4, true);
 		return (orientation + 2)%4;
 	}
@@ -634,7 +646,9 @@ int decideDirection(Mapping *mapping, Point *points[16], bool walls[16][16], int
 	}
 	else {
 		printf("TURNING: 180 degrees\n");
-		turn(mapping, 'R', 180, 70);
+		turn(mapping, 'R', 90, 50);
+		correctPosition(mapping);
+		turn(mapping, 'R', 90, 50);
 		checkTurn(mapping, (orientation + 2) % 4, true);
 		return (orientation + 2) % 4;
 	}
@@ -803,7 +817,7 @@ int main()
 	double time_spent; 
 	begin = clock();
 	//NEVER GO BELOW 15 for followList!
-	followList(mapping, list, 100);
+	followList(mapping, list, 50);
 	
 	end = clock();
 	time_spent = (double)(end - begin) / CLOCKS_PER_SEC;

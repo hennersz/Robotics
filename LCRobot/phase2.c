@@ -95,9 +95,6 @@ void findNextPoint1(Mapping *mapping, Point *point, Point *targetPoint)
 	double angle = atan2(deltaY, deltaX);
 	point->x = mapping->x + (MINIMUM_DISTANCE * cos(angle));
 	point->y = mapping->y + (MINIMUM_DISTANCE * sin(angle));
-
-	set_point(mapping->x/10, mapping->y/10);
-	set_point1(mapping->x/10, mapping->y/10);
 }
 
 void goToPoint1(Mapping *mapping, Point *targetPoint, Point *tempPoint, int speed, int orientation)
@@ -110,8 +107,6 @@ void preparePointPhase2(Mapping *mapping, Point *targetPoint, int speed, int ori
 {
 	Point *tempPoint = malloc(sizeof(Point));
 	initialisePoint(tempPoint);
-	set_point((int)targetPoint->x/10, (int)targetPoint->y/10);
-	set_point1((int)targetPoint->x/10, (int)targetPoint->y/10);
 	printf("targetPoint: x = %f, y = %f\n", targetPoint->x, targetPoint->y);
 
 	while(!tooClose1(targetPoint, mapping, MINIMUM_DISTANCE))

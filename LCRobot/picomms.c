@@ -533,9 +533,7 @@ int connect_to_robot(int number) {
 
   if(number == 0) {
     strcpy(inetAddr, "127.0.0.1");
-    connect_to_simulator();
-    set_origin1();
-  }
+    }
   else {
     if(number == 1) {
       strcpy(inetAddr, "128.16.79.1");

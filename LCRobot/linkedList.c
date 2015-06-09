@@ -7,7 +7,7 @@ void initialiseList(List* list)
 	Point* firstNode = malloc(sizeof(Point));
 
 	firstNode->x = 0;
-	firstNode->y = -300;
+	firstNode->y = 0;
 	firstNode->address = -4;
 
 	list->first = firstNode;
