@@ -17,6 +17,7 @@ RIGHT = 2
 LEFT = 3
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 TCP_IP = '128.16.79.12'
 =======
 <<<<<<< Updated upstream
@@ -24,6 +25,10 @@ TCP_IP = '128.16.79.6'
 =======
 TCP_IP = '128.16.79.4'
 >>>>>>> Stashed changes
+>>>>>>> origin/master
+=======
+TCP_IP = '128.16.79.16'
+
 >>>>>>> origin/master
 
 TCP_PORT = 55443
