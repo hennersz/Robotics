@@ -1,0 +1,2 @@
+int XOFFSET;
+int YOFFSET;
