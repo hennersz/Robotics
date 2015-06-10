@@ -1,5 +1,5 @@
 CC=gcc
 CFLAGS=-g -Wall -lm
 all:	program
-program: test.c picomms.c mapping.c turning.c linkedList.c dijkstra.c printMaze.c phase2.c mazeTurning.c
-	$(CC) $(CFLAGS) -o test test.c picomms.c mapping.c turning.c linkedList.c dijkstra.c printMaze.c phase2.c mazeTurning.c  -lm
+program: test.c picomms.c mapping.c turning.c linkedList.c dijkstra.c printMaze.c phase2.c
+	$(CC) $(CFLAGS) -o test test.c picomms.c mapping.c turning.c linkedList.c dijkstra.c printMaze.c phase2.c  -lm

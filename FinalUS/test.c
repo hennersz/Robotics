@@ -11,7 +11,7 @@
 #include <time.h>
 #include "picomms.h"
 #include "printMaze.h"
-#include "mazeTurning.h"
+#include "phase2.h"
 
 #define LIMIT 50
 #define WALLLIMIT 5  
@@ -397,29 +397,6 @@ void updatingCoordinates(Mapping *mapping, int orientation, int address)
 			mapping->x = addressToX(address);
 }
 
-void takingMeasurements(int checkedWalls[3])
-{
-	checkedWalls[0] = 0;
-	checkedWalls[1] = 0;
-	checkedWalls[2] = 0;
-	int frontleft, frontright, sideleft, sideright;
-	int usfront, i;	
-
-	for(i = 0; i < 10; i++)
-	{
-		get_front_ir_dists(&frontleft, &frontright);
-		get_side_ir_dists(&sideleft, &sideright);
-		usfront = get_us_dist();
-
-		if(frontleft > 30 && sideleft > 30)
-			checkedWalls[0]++;
-		if(frontright > 30 && sideright > 30)
-			checkedWalls[2]++;
-		if(usfront > 40)
-			checkedWalls[1]++;
-	}
-}
-
 void takingMeasurements1(int checkedWalls[3], Mapping *mapping, int orientation, int address)
 {
 	checkedWalls[0] = 0;
@@ -465,76 +442,15 @@ void takingMeasurements1(int checkedWalls[3], Mapping *mapping, int orientation,
 		orientation = (orientation + 2) % 4;
 		updatingCoordinates(mapping, orientation, address);
 	}
+	turn(mapping, 'L', 90, 50);
 }
 
-void takingMeasurements2(int checkedWalls[3], Mapping *mapping, int orientation, int address)
-{
-	checkedWalls[0] = 0;
-	checkedWalls[1] = 0;
-	checkedWalls[2] = 0;
-
-	int usfront, i;	
-
-	for(i = 0; i < 10; i++)
-	{
-		usfront = get_us_dist();
-		if(usfront > 35)
-			checkedWalls[1]++;
-	}
-	if(checkedWalls[1] < WALLLIMIT)
-	{
-		correctPosition(mapping);
-		updatingCoordinates(mapping, orientation, address);
-	}
-	turn(mapping, 'R', 90, 50);
-	for(i = 0; i < 10; i++)
-	{
-		usfront = get_us_dist();
-		if(usfront > 35)
-			checkedWalls[2]++;
-	}
-	if(checkedWalls[2] < WALLLIMIT)
-	{
-		correctPosition(mapping);
-		orientation = (orientation + 2) % 4;
-		updatingCoordinates(mapping, orientation, address);
-	}
-	turn(mapping, 'L', 180, 50);
-	for(i = 0; i < 10; i++)
-	{
-		usfront = get_us_dist();
-		if(usfront > 35)
-			checkedWalls[0]++;
-	}
-	if(checkedWalls[0] < WALLLIMIT)
-	{
-		correctPosition(mapping);
-		orientation = (orientation + 3)%4;
-		updatingCoordinates(mapping, orientation, address);
-	}
-}
-
-void takeMeasurements(Mapping *mapping, Point *points[16], bool walls[16][16], int address, int *orientation)
+void takeMeasurements(Mapping *mapping, Point *targetPoint, bool walls[16][16], int address, int *orientation)
 {
 	int checkedWalls[3];
 	checkTurn(mapping, *orientation, true);
-	takingMeasurements(checkedWalls);
+	takingMeasurements1(checkedWalls, mapping, *orientation, address);
 	updateWalls(mapping, checkedWalls, walls, address, *orientation);
-	int targetOrientation = decideDirectionInt(mapping, points, walls, address, *orientation);
-	int difference = targetOrientation - *orientation;
-	printf("Difference = %i\n", difference);
-	if(difference == -1 || difference == 3)                       //turning left
-	{
-		takingMeasurements2(checkedWalls, mapping, *orientation, address);
-		updateWalls(mapping, checkedWalls, walls, address, *orientation);
-		*orientation = decideDirection2(mapping, points, walls, address, *orientation);
-	}
-	else 
-	{
-		takingMeasurements1(checkedWalls, mapping, *orientation, address);
-		updateWalls(mapping, checkedWalls, walls, address, *orientation);
-		*orientation = decideDirection1(mapping, points, walls, address, *orientation);
-	}
 }
 
 int decideDirection(Mapping *mapping, Point *points[16], bool walls[16][16], int address, int orientation)
@@ -625,11 +541,12 @@ int traverseMaze(Mapping *mapping, bool walls[16][16], Point *points[16], int sp
 	{
 		preparePoint(mapping, points[address], 30, *orientation);
 		scanForWalls(mapping, points[address], 20, walls, address, *orientation);
-		takeMeasurements(mapping, points, walls, address, orientation);
+		takeMeasurements(mapping, points[address], walls, address, orientation);
 		printingMaze(walls);
 		if(visitedEverything(points))
 			break;
 		printf("BEFORE currentOrientation = %i\taddress = %i\n\n", *orientation, address);
+		*orientation = decideDirection(mapping, points, walls, address, *orientation);
 		set_motors(0, 0);
 		
 		if(*orientation == 0)
@@ -749,10 +666,29 @@ int main()
 	double time_spent; 
 	begin = clock();
 	//NEVER GO BELOW 15 for followList!
-	followList(mapping, list, 80);
+	followList(mapping, list, 117);
 	
 	end = clock();
 	time_spent = (double)(end - begin) / (double)CLOCKS_PER_SEC;
 	printf("Time taken: %f\n", time_spent);
 	return 0;
 }
+
+/*bool walls[16][16] = {{0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},	
+			{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},	
+			{0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //5
+			{0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0}, //7
+			{0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0}, //9
+			{0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0},
+			{0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0}, //12
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0}};
+
+	*/
