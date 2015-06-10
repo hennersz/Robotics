@@ -1,1 +1,0 @@
-void printingMaze(bool walls[16][16]);
