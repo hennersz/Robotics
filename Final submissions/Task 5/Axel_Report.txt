@@ -1,0 +1,9 @@
+Throughout the entire robotics course, I believe that my partner, Henry, and I were able to effectively work together. We always tried to finish most of the work within lab time and we mostly succeeded in doing so. If we were not able to finish the work within lab time, we either organized a meeting to do some more peer programming together or sometimes, we divided up the work and finished it on our own. If we finished something on our own, we would always discuss all of the work that we had done individually to make sure that both of us understood all of the code.
+
+We started writing the code for the race in the same way that we wrote all of our other code, together in the lab. However we realized relatively soon that this program would be considerably larger than the other ones and that we would not have enough time to finish it within lab time. Hence, we divided up the work. 
+
+For this task we decided to reuse a lot of code from previous tasks like our mapping code. So we started off by improving those files. Then I wrote an initial version of phase 1. However we made a lot of improvements to it together. We also realized that our turning code, that we had previously written, needed a lot of improvements so I rewrote it. After we got phase 1 working, Henry wrote an initial version of phase 2 and the calibration code.
+
+Even though phase 1 and 2 worked on the simulator, we had some problems making it work on the robot. So together we spend a lot of time debugging and improving our program. After we qualified, we still tried to improve our code so I wrote the printMaze code to help us debugging and Henry wrote the code to calibrate the robot in the starting square. I also created a new version of our code that would only use the ultrasound sensors since the IR sensors gave a lot of misreads.  
+
+In general, I believe that we divided up the work equally therefore I am very happy with Henry’s efforts. 
