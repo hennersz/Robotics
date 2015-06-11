@@ -1,8 +1,9 @@
 //Things to look at:
-// - Initialise calibration! (Check comments)
-// - updateCoordinates (Should we use sensor offset)
-// - CorrectPosition (Shouldn't we take in consideration the USOFFSET?)
-
+//- XOFFSET and YOFFSET: Should we add 10?
+//- USOFFSET
+//- TURNING SPEED?
+//- WIDTH/WHEEL DIAMETER in mapping.h
+//- Speed at the end of this file
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -682,6 +683,8 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 		printf("currentAddress = %i\ttargetAddress = %i\n", address, currentNode->address);
 		targetOrientation = getTargetOrientation(orientation, address, currentNode->address);
 		turning(mapping, orientation, targetOrientation, walls, address);
+		set_motors(0, 0);
+		usleep(50);
 		orientation = targetOrientation;
 		preparePoint(mapping, currentNode , 30, orientation);
 		if(currentNode->address == -4)
@@ -689,6 +692,8 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 		scanForEnd(mapping, currentNode, 30);
 		address = currentNode->address;
 		currentNode=currentNode->parent;
+		set_motors(0, 0);
+		usleep(50);
 	}
 	MIDDLEDIST = 35;
 	correctPosition(mapping);
@@ -749,7 +754,7 @@ int main()
 	double time_spent; 
 	begin = clock();
 	//NEVER GO BELOW 15 for followList!
-	followList(mapping, list, 80);
+	followList(mapping, list, 115);
 	
 	end = clock();
 	time_spent = (double)(end - begin) / (double)CLOCKS_PER_SEC;

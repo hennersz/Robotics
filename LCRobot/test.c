@@ -17,7 +17,7 @@
 #define WALLLIMIT 5  //For lily: 4
 #define CORRECTSPEED 6
 #define TURNINGSPEED 2
-#define USOFFEST 9  //8
+#define USOFFEST 5   //9  
 #define HEIGHT 26
 
 int XOFFSET = 0;		     //Used to determine XOFFSET in initialCalibration
@@ -68,7 +68,7 @@ void initialCalibration(Mapping *mapping)
 
 	int y = get_us_dist();
 	usleep(100000);
-	YOFFSET = (600 - (HEIGHT/2)*10 - (y - USOFFEST)*10)+10;// + (HEIGHT * 5)
+	YOFFSET = (600 - (HEIGHT/2)*10 - (y - USOFFEST)*10);    //+10;
 	printf("US y measurement = %i\n", y);
 	printf("Measured YOFFSET value = %i\n",YOFFSET);
 	//mapping->y = (y + USOFFEST)*10-450;
@@ -77,7 +77,7 @@ void initialCalibration(Mapping *mapping)
 
 	int x = get_us_dist();
 	usleep(100000);
-	XOFFSET = (300 - (x - USOFFEST)*10 - (HEIGHT/2)*10)+10;
+	XOFFSET = (300 - (x - USOFFEST)*10 - (HEIGHT/2)*10);    //+10;
 	printf("US x measurement = %i\n", x);
 	printf("Measured XOFFSET value = %i\n",XOFFSET);
 	//mapping->x = (x+USOFFEST)*10 + HEIGHT/2 - 300;
@@ -737,6 +737,8 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 		printf("currentAddress = %i\ttargetAddress = %i\n", address, currentNode->address);
 		targetOrientation = getTargetOrientation(orientation, address, currentNode->address);
 		turning(mapping, orientation, targetOrientation, walls, address);
+		set_motors(0, 0);
+		usleep(50);
 		orientation = targetOrientation;
 		preparePoint(mapping, currentNode , 30, orientation);
 		if(currentNode->address == -4)
@@ -744,6 +746,8 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 		scanForEnd(mapping, currentNode, 30);
 		address = currentNode->address;
 		currentNode=currentNode->parent;
+		set_motors(0, 0);
+		usleep(50);
 	}
 	MIDDLEDIST = 35;
 	int direction = !closestWall();
@@ -810,14 +814,14 @@ int main()
 	initialiseList(list);
 	dijkstra(walls, list, points, 0, 15);
 	MINIMUM_DISTANCE = 380;
-	MINDIST2 = 200;
+	MINDIST2 = 150;              //200 if speed is 100
 	initialCalibration(mapping);
 
 	clock_t begin, end;
 	double time_spent; 
 	begin = clock();
 	//NEVER GO BELOW 15 for followList!
-	followList(mapping, list, 50);
+	followList(mapping, list, 100);
 	
 	end = clock();
 	time_spent = (double)(end - begin) / CLOCKS_PER_SEC;

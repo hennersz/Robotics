@@ -599,6 +599,8 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 		printf("currentAddress = %i\ttargetAddress = %i\n", address, currentNode->address);
 		targetOrientation = getTargetOrientation(orientation, address, currentNode->address);
 		turning(mapping, orientation, targetOrientation, walls, address);
+		set_motors(0, 0);
+		usleep(50);
 		orientation = targetOrientation;
 		preparePoint(mapping, currentNode , 30, orientation);
 		if(currentNode->address == -4)
@@ -606,6 +608,8 @@ void returnToStart(Mapping *mapping, List *list, bool walls[16][16], int orienta
 		scanForEnd(mapping, currentNode, 30);
 		address = currentNode->address;
 		currentNode=currentNode->parent;
+		set_motors(0, 0);
+		usleep(50);
 	}
 	MIDDLEDIST = 35;
 	correctPosition(mapping);
